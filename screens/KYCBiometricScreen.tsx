@@ -52,6 +52,16 @@ export default function KYCBiometricScreen({ navigation }: KYCBiometricScreenPro
   const [lsegChecked, setLsegChecked] = useState(false);
   const [lsegChecking, setLsegChecking] = useState(false);
   
+  const [vaultPinStarted, setVaultPinStarted] = useState(false);
+  const [vaultPinPhase, setVaultPinPhase] = useState(0);
+  const [vaultPinComplete, setVaultPinComplete] = useState(false);
+  const [rawBiometricData, setRawBiometricData] = useState("");
+  const [encryptedHash, setEncryptedHash] = useState("");
+  const [loginCode, setLoginCode] = useState("");
+  const [codeRevealed, setCodeRevealed] = useState(false);
+  const [testLoginActive, setTestLoginActive] = useState(false);
+  const [testLoginSuccess, setTestLoginSuccess] = useState(false);
+  
   const [currentFingerIndex, setCurrentFingerIndex] = useState(0);
   const [fingerScans, setFingerScans] = useState<{ [key: string]: number }>({
     rightIndex: 0,
@@ -97,6 +107,117 @@ export default function KYCBiometricScreen({ navigation }: KYCBiometricScreenPro
       lsegPulseAnim.value = 1;
     }
   }, [lsegChecking]);
+
+  const generateRandomHex = (length: number) => {
+    const chars = "0123456789ABCDEF";
+    let result = "";
+    for (let i = 0; i < length; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  };
+
+  const generateLoginCode = () => {
+    const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+    let result = "";
+    for (let i = 0; i < 3; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  };
+
+  useEffect(() => {
+    if (vaultPinStarted && vaultPinPhase === 0) {
+      setVaultPinPhase(1);
+    }
+  }, [vaultPinStarted]);
+
+  useEffect(() => {
+    if (vaultPinPhase === 1) {
+      let dataInterval: NodeJS.Timeout;
+      let charIndex = 0;
+      const fullData = "8F2A9C1B4E7D3F5A2C8B1E9D4A6C3F7E2B5A8D1C4E9F2A7B3D6E8F1C2A5B7D9E4F6A8C1B3E5D7F9A2C4B6E8D1F3A5C7B9E2D4F6A8...";
+      
+      dataInterval = setInterval(() => {
+        charIndex += 2;
+        if (charIndex <= fullData.length) {
+          setRawBiometricData(fullData.substring(0, charIndex));
+        }
+      }, 40);
+      
+      const timer = setTimeout(() => {
+        clearInterval(dataInterval);
+        setRawBiometricData(fullData);
+        setVaultPinPhase(2);
+      }, 2500);
+      
+      return () => {
+        clearInterval(dataInterval);
+        clearTimeout(timer);
+      };
+    }
+  }, [vaultPinPhase]);
+
+  useEffect(() => {
+    if (vaultPinPhase === 2) {
+      let hashInterval: NodeJS.Timeout;
+      let charIndex = 0;
+      const fullHash = "a7f2k9m1b4c6e8z3x5w7q2p0n8j1l4...";
+      
+      hashInterval = setInterval(() => {
+        charIndex += 1;
+        if (charIndex <= fullHash.length) {
+          setEncryptedHash(fullHash.substring(0, charIndex));
+        }
+      }, 60);
+      
+      const timer = setTimeout(() => {
+        clearInterval(hashInterval);
+        setEncryptedHash(fullHash);
+        setVaultPinPhase(3);
+      }, 2000);
+      
+      return () => {
+        clearInterval(hashInterval);
+        clearTimeout(timer);
+      };
+    }
+  }, [vaultPinPhase]);
+
+  useEffect(() => {
+    if (vaultPinPhase === 3) {
+      const code = generateLoginCode();
+      setLoginCode(code);
+      
+      const timer = setTimeout(() => {
+        setVaultPinPhase(4);
+        setVaultPinComplete(true);
+      }, 1500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [vaultPinPhase]);
+
+  const handleVaultPinStart = () => {
+    if (!vaultPinStarted) {
+      setVaultPinStarted(true);
+      setRawBiometricData("");
+      setEncryptedHash("");
+      setLoginCode("");
+      setVaultPinPhase(0);
+      setVaultPinComplete(false);
+      setTestLoginSuccess(false);
+    }
+  };
+
+  const handleTestLogin = () => {
+    setTestLoginActive(true);
+    
+    setTimeout(() => {
+      setTestLoginActive(false);
+      setTestLoginSuccess(true);
+    }, 1500);
+  };
 
   useEffect(() => {
     if (irisScanning) {
@@ -691,6 +812,208 @@ export default function KYCBiometricScreen({ navigation }: KYCBiometricScreenPro
             </View>
           ) : null}
         </Animated.View>
+
+        <Animated.View 
+          entering={FadeIn.duration(600).delay(600)}
+          style={[styles.biometricCard, styles.vaultPinCard]}
+        >
+          <View style={styles.biometricHeader}>
+            <View
+              style={[
+                styles.iconContainer,
+                vaultPinComplete && styles.iconContainerActive,
+                vaultPinStarted && !vaultPinComplete && styles.iconContainerVaultPinProcessing,
+              ]}
+            >
+              <Feather
+                name="key"
+                size={28}
+                color={
+                  vaultPinComplete
+                    ? Colors.dark.success
+                    : vaultPinStarted
+                    ? "#8B5CF6"
+                    : Colors.dark.textSecondary
+                }
+              />
+            </View>
+            <View style={styles.biometricInfo}>
+              <ThemedText type="h4" style={styles.biometricTitle}>
+                Vault PIN
+              </ThemedText>
+              <ThemedText
+                type="small"
+                style={{ color: Colors.dark.textSecondary }}
+              >
+                {vaultPinComplete
+                  ? "Secure login code generated"
+                  : vaultPinStarted
+                  ? "Generating secure PIN..."
+                  : "Obtain your secure login PIN"}
+              </ThemedText>
+            </View>
+          </View>
+          
+          <View style={styles.vaultPinDescription}>
+            <Feather name="info" size={16} color={Colors.dark.textTertiary} />
+            <ThemedText
+              type="small"
+              style={styles.vaultPinDescriptionText}
+            >
+              Each biometric characteristic (fingerprint, iris, face) is converted through algorithms into a unique numerical representation - typically a string of encrypted numbers/data points that cannot be reverse-engineered back into the original image.
+            </ThemedText>
+          </View>
+
+          {!vaultPinStarted ? (
+            <Pressable 
+              style={styles.vaultPinButton}
+              onPress={handleVaultPinStart}
+            >
+              <Feather name="zap" size={20} color={Colors.dark.buttonText} />
+              <ThemedText type="body" style={styles.vaultPinButtonText}>
+                Obtain PIN
+              </ThemedText>
+            </Pressable>
+          ) : null}
+
+          {vaultPinPhase >= 1 ? (
+            <View style={styles.phaseContainer}>
+              <View style={styles.phaseHeader}>
+                <View style={[styles.phaseIndicator, vaultPinPhase >= 2 && styles.phaseIndicatorComplete]}>
+                  {vaultPinPhase >= 2 ? (
+                    <Feather name="check" size={12} color={Colors.dark.success} />
+                  ) : (
+                    <ThemedText type="small" style={styles.phaseNumber}>1</ThemedText>
+                  )}
+                </View>
+                <ThemedText type="small" style={styles.phaseTitle}>
+                  Raw Biometric Data
+                </ThemedText>
+              </View>
+              <View style={styles.dataDisplay}>
+                <ThemedText type="small" style={styles.dataText}>
+                  {rawBiometricData}
+                </ThemedText>
+              </View>
+            </View>
+          ) : null}
+
+          {vaultPinPhase >= 2 ? (
+            <View style={styles.phaseContainer}>
+              <View style={styles.phaseArrow}>
+                <Feather name="arrow-down" size={20} color="#8B5CF6" />
+                <ThemedText type="small" style={styles.convertingText}>
+                  Converting to secure template...
+                </ThemedText>
+              </View>
+              <View style={styles.phaseHeader}>
+                <View style={[styles.phaseIndicator, vaultPinPhase >= 3 && styles.phaseIndicatorComplete]}>
+                  {vaultPinPhase >= 3 ? (
+                    <Feather name="check" size={12} color={Colors.dark.success} />
+                  ) : (
+                    <ThemedText type="small" style={styles.phaseNumber}>2</ThemedText>
+                  )}
+                </View>
+                <ThemedText type="small" style={styles.phaseTitle}>
+                  Encrypted Hash Generated
+                </ThemedText>
+              </View>
+              <View style={styles.hashDisplay}>
+                <ThemedText type="small" style={styles.hashText}>
+                  {encryptedHash}
+                </ThemedText>
+              </View>
+            </View>
+          ) : null}
+
+          {vaultPinPhase >= 3 ? (
+            <View style={styles.phaseContainer}>
+              <View style={styles.phaseHeader}>
+                <View style={[styles.phaseIndicator, styles.phaseIndicatorComplete]}>
+                  <Feather name="check" size={12} color={Colors.dark.success} />
+                </View>
+                <ThemedText type="small" style={[styles.phaseTitle, { color: Colors.dark.success }]}>
+                  Biometric template saved securely
+                </ThemedText>
+              </View>
+              
+              <View style={styles.loginCodeContainer}>
+                <ThemedText type="small" style={styles.loginCodeLabel}>
+                  Your Login Code (Last 3 digits):
+                </ThemedText>
+                <Pressable 
+                  style={styles.loginCodeDisplay}
+                  onPress={() => setCodeRevealed(!codeRevealed)}
+                >
+                  <ThemedText type="h1" style={styles.loginCodeText}>
+                    {codeRevealed ? `***...${loginCode}` : "***...***"}
+                  </ThemedText>
+                  <Feather 
+                    name={codeRevealed ? "eye-off" : "eye"} 
+                    size={24} 
+                    color="#8B5CF6" 
+                  />
+                </Pressable>
+                <ThemedText type="small" style={styles.loginCodeHint}>
+                  Next time, use your fingerprint + these 3 digits to log in
+                </ThemedText>
+                <ThemedText type="small" style={styles.tapToReveal}>
+                  [Tap to reveal/hide]
+                </ThemedText>
+              </View>
+            </View>
+          ) : null}
+
+          {vaultPinPhase >= 4 ? (
+            <View style={styles.phaseContainer}>
+              <View style={styles.phaseHeader}>
+                <View style={[styles.phaseIndicator, styles.phaseIndicatorComplete]}>
+                  <Feather name="check" size={12} color={Colors.dark.success} />
+                </View>
+                <ThemedText type="small" style={[styles.phaseTitle, { color: Colors.dark.success }]}>
+                  Biometric setup complete
+                </ThemedText>
+              </View>
+
+              {!testLoginSuccess ? (
+                <Pressable 
+                  style={[styles.testLoginButton, testLoginActive && styles.testLoginButtonActive]}
+                  onPress={handleTestLogin}
+                  disabled={testLoginActive}
+                >
+                  {testLoginActive ? (
+                    <>
+                      <Feather name="loader" size={20} color={Colors.dark.buttonText} />
+                      <ThemedText type="body" style={styles.testLoginButtonText}>
+                        Verifying...
+                      </ThemedText>
+                    </>
+                  ) : (
+                    <>
+                      <Feather name="user-check" size={20} color={Colors.dark.buttonText} />
+                      <ThemedText type="body" style={styles.testLoginButtonText}>
+                        Test Login
+                      </ThemedText>
+                    </>
+                  )}
+                </Pressable>
+              ) : (
+                <View style={styles.testLoginSuccess}>
+                  <Feather name="check-circle" size={24} color={Colors.dark.success} />
+                  <ThemedText type="body" style={styles.testLoginSuccessText}>
+                    Biometric template verified successfully
+                  </ThemedText>
+                </View>
+              )}
+              
+              {!testLoginSuccess ? (
+                <ThemedText type="small" style={styles.testLoginHint}>
+                  User places finger again to verify the template works
+                </ThemedText>
+              ) : null}
+            </View>
+          ) : null}
+        </Animated.View>
       </Animated.View>
 
       <View style={styles.spacer} />
@@ -1075,6 +1398,176 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
     backgroundColor: "rgba(16, 185, 129, 0.08)",
     borderRadius: BorderRadius.sm,
+  },
+  vaultPinCard: {
+    borderColor: "#8B5CF6",
+    backgroundColor: "rgba(139, 92, 246, 0.03)",
+  },
+  iconContainerVaultPinProcessing: {
+    backgroundColor: "rgba(139, 92, 246, 0.15)",
+  },
+  vaultPinDescription: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: Spacing.sm,
+    marginTop: Spacing.lg,
+    paddingTop: Spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: Colors.dark.border,
+  },
+  vaultPinDescriptionText: {
+    flex: 1,
+    color: Colors.dark.textTertiary,
+    lineHeight: 18,
+  },
+  vaultPinButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.sm,
+    marginTop: Spacing.lg,
+    padding: Spacing.md,
+    backgroundColor: "#8B5CF6",
+    borderRadius: BorderRadius.sm,
+  },
+  vaultPinButtonText: {
+    color: Colors.dark.buttonText,
+    fontWeight: "600",
+  },
+  phaseContainer: {
+    marginTop: Spacing.lg,
+    gap: Spacing.md,
+  },
+  phaseHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+  },
+  phaseIndicator: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "rgba(139, 92, 246, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#8B5CF6",
+  },
+  phaseIndicatorComplete: {
+    backgroundColor: "rgba(16, 185, 129, 0.2)",
+    borderColor: Colors.dark.success,
+  },
+  phaseNumber: {
+    color: "#8B5CF6",
+    fontWeight: "600",
+    fontSize: 11,
+  },
+  phaseTitle: {
+    color: Colors.dark.text,
+    fontWeight: "500",
+  },
+  phaseArrow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+    paddingVertical: Spacing.sm,
+  },
+  convertingText: {
+    color: "#8B5CF6",
+    fontStyle: "italic",
+  },
+  dataDisplay: {
+    padding: Spacing.md,
+    backgroundColor: "rgba(139, 92, 246, 0.08)",
+    borderRadius: BorderRadius.sm,
+    borderWidth: 1,
+    borderColor: "rgba(139, 92, 246, 0.2)",
+  },
+  dataText: {
+    color: "#A78BFA",
+    fontFamily: "monospace",
+    fontSize: 11,
+    lineHeight: 16,
+  },
+  hashDisplay: {
+    padding: Spacing.md,
+    backgroundColor: "rgba(16, 185, 129, 0.08)",
+    borderRadius: BorderRadius.sm,
+    borderWidth: 1,
+    borderColor: "rgba(16, 185, 129, 0.2)",
+  },
+  hashText: {
+    color: Colors.dark.success,
+    fontFamily: "monospace",
+    fontSize: 12,
+  },
+  loginCodeContainer: {
+    alignItems: "center",
+    gap: Spacing.sm,
+    padding: Spacing.lg,
+    backgroundColor: "rgba(139, 92, 246, 0.05)",
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: "rgba(139, 92, 246, 0.3)",
+  },
+  loginCodeLabel: {
+    color: Colors.dark.textSecondary,
+  },
+  loginCodeDisplay: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.lg,
+    padding: Spacing.md,
+    backgroundColor: Colors.dark.backgroundSecondary,
+    borderRadius: BorderRadius.sm,
+  },
+  loginCodeText: {
+    color: "#8B5CF6",
+    fontFamily: "monospace",
+    letterSpacing: 4,
+  },
+  loginCodeHint: {
+    color: Colors.dark.textSecondary,
+    textAlign: "center",
+    lineHeight: 18,
+  },
+  tapToReveal: {
+    color: Colors.dark.textTertiary,
+    fontSize: 11,
+  },
+  testLoginButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.sm,
+    padding: Spacing.md,
+    backgroundColor: Colors.dark.primary,
+    borderRadius: BorderRadius.sm,
+  },
+  testLoginButtonActive: {
+    backgroundColor: Colors.dark.textTertiary,
+  },
+  testLoginButtonText: {
+    color: Colors.dark.buttonText,
+    fontWeight: "600",
+  },
+  testLoginSuccess: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.sm,
+    padding: Spacing.md,
+    backgroundColor: "rgba(16, 185, 129, 0.1)",
+    borderRadius: BorderRadius.sm,
+  },
+  testLoginSuccessText: {
+    color: Colors.dark.success,
+    fontWeight: "500",
+  },
+  testLoginHint: {
+    color: Colors.dark.textTertiary,
+    textAlign: "center",
+    fontSize: 11,
   },
   spacer: {
     flex: 1,
