@@ -40,14 +40,10 @@ const MARKET_DATA = [
 ];
 
 export default function OptimusScreen() {
-  const { setNeedsOptimus, convertedAmounts } = useAuth();
+  const { convertedAmounts } = useAuth();
 
   const formatNumber = (num: number): string => {
     return num.toLocaleString("en-GB");
-  };
-
-  const handleDashboardNavigation = () => {
-    setNeedsOptimus(false);
   };
 
   return (
@@ -130,14 +126,6 @@ export default function OptimusScreen() {
           ))}
         </Animated.View>
 
-        <Animated.View entering={FadeIn.duration(400).delay(400)} style={styles.dashboardButton}>
-          <AnimatedPressable onPress={handleDashboardNavigation} style={styles.dashboardPressable}>
-            <View style={styles.dashboardButtonInner}>
-              <ThemedText style={styles.dashboardButtonText}>Continue to Dashboard</ThemedText>
-              <Feather name="arrow-right" size={16} color="#1a1a1a" />
-            </View>
-          </AnimatedPressable>
-        </Animated.View>
       </View>
 
       <Animated.View entering={FadeIn.duration(400).delay(350)} style={styles.screenNavigation}>
@@ -527,34 +515,6 @@ const styles = StyleSheet.create({
   chartContainer: {
     height: 60,
     overflow: "hidden",
-  },
-  dashboardButton: {
-    marginTop: Spacing.md,
-  },
-  dashboardPressable: {
-    borderRadius: BorderRadius.full,
-    overflow: "hidden",
-  },
-  dashboardButtonInner: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: Spacing.sm,
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.xl,
-    backgroundColor: "#4ade80",
-    borderRadius: BorderRadius.full,
-    shadowColor: "#4ade80",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  dashboardButtonText: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#1a1a1a",
-    letterSpacing: 0.5,
   },
   screenNavigation: {
     flexDirection: "row",

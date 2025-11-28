@@ -503,7 +503,7 @@ const styles = StyleSheet.create({
   sectionTitleText: {
     fontSize: 14,
     fontWeight: "400",
-    color: "#A8C4B5",
+    color: "#4ade80",
     letterSpacing: 1,
     textTransform: "uppercase",
   },
