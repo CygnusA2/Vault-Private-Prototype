@@ -11,7 +11,7 @@ import Animated, {
   FadeInDown,
   FadeIn,
 } from "react-native-reanimated";
-import { ScreenKeyboardAwareScrollView } from "@/components/ScreenKeyboardAwareScrollView";
+import { AuthKeyboardAwareScrollView } from "@/components/AuthKeyboardAwareScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import { AuthStackParamList } from "@/navigation/AuthStackNavigator";
@@ -95,7 +95,7 @@ export default function SMSVerificationScreen({
   };
 
   return (
-    <ScreenKeyboardAwareScrollView contentContainerStyle={styles.scrollContent}>
+    <AuthKeyboardAwareScrollView contentContainerStyle={styles.scrollContent}>
       <Animated.View entering={FadeInDown.duration(600).delay(100)} style={styles.header}>
         <ThemedText type="h1" style={styles.title}>
           Enter verification code
@@ -175,7 +175,7 @@ export default function SMSVerificationScreen({
           </ThemedText>
         </Pressable>
       </Animated.View>
-    </ScreenKeyboardAwareScrollView>
+    </AuthKeyboardAwareScrollView>
   );
 }
 

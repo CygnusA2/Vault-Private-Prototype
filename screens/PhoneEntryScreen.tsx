@@ -8,7 +8,7 @@ import Animated, {
   withSpring,
   FadeInDown,
 } from "react-native-reanimated";
-import { ScreenKeyboardAwareScrollView } from "@/components/ScreenKeyboardAwareScrollView";
+import { AuthKeyboardAwareScrollView } from "@/components/AuthKeyboardAwareScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import { AuthStackParamList } from "@/navigation/AuthStackNavigator";
@@ -49,7 +49,7 @@ export default function PhoneEntryScreen({ navigation }: PhoneEntryScreenProps) 
   };
 
   return (
-    <ScreenKeyboardAwareScrollView
+    <AuthKeyboardAwareScrollView
       contentContainerStyle={styles.scrollContent}
     >
       <Animated.View entering={FadeInDown.duration(600).delay(100)} style={styles.header}>
@@ -143,7 +143,7 @@ export default function PhoneEntryScreen({ navigation }: PhoneEntryScreenProps) 
           </ThemedText>
         </AnimatedPressable>
       </Animated.View>
-    </ScreenKeyboardAwareScrollView>
+    </AuthKeyboardAwareScrollView>
   );
 }
 

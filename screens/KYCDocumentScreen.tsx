@@ -9,7 +9,7 @@ import Animated, {
   FadeInDown,
   FadeIn,
 } from "react-native-reanimated";
-import { ScreenScrollView } from "@/components/ScreenScrollView";
+import { AuthScreenScrollView } from "@/components/AuthScreenScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import { AuthStackParamList } from "@/navigation/AuthStackNavigator";
@@ -54,7 +54,7 @@ export default function KYCDocumentScreen({ navigation }: KYCDocumentScreenProps
   };
 
   return (
-    <ScreenScrollView contentContainerStyle={styles.scrollContent}>
+    <AuthScreenScrollView contentContainerStyle={styles.scrollContent}>
       <ProgressStepper currentStep={2} totalSteps={5} />
 
       <Animated.View entering={FadeInDown.duration(600).delay(100)} style={styles.header}>
@@ -177,7 +177,7 @@ export default function KYCDocumentScreen({ navigation }: KYCDocumentScreenProps
           </ThemedText>
         </AnimatedPressable>
       </Animated.View>
-    </ScreenScrollView>
+    </AuthScreenScrollView>
   );
 }
 

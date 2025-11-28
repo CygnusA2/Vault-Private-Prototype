@@ -15,3 +15,20 @@ export function useScreenInsets() {
     scrollInsetBottom: insets.bottom + 16,
   };
 }
+
+export function useAuthScreenInsets() {
+  const insets = useSafeAreaInsets();
+  
+  let headerHeight = 0;
+  try {
+    headerHeight = useHeaderHeight();
+  } catch {
+    headerHeight = 0;
+  }
+
+  return {
+    paddingTop: headerHeight > 0 ? headerHeight + Spacing.xl : insets.top + Spacing.xl,
+    paddingBottom: insets.bottom + Spacing.xl,
+    scrollInsetBottom: insets.bottom + 16,
+  };
+}

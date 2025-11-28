@@ -7,7 +7,7 @@ import Animated, {
   withSpring,
   FadeInDown,
 } from "react-native-reanimated";
-import { ScreenKeyboardAwareScrollView } from "@/components/ScreenKeyboardAwareScrollView";
+import { AuthKeyboardAwareScrollView } from "@/components/AuthKeyboardAwareScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import { AuthStackParamList } from "@/navigation/AuthStackNavigator";
@@ -41,7 +41,7 @@ export default function KYCNameScreen({ navigation }: KYCNameScreenProps) {
   };
 
   return (
-    <ScreenKeyboardAwareScrollView contentContainerStyle={styles.scrollContent}>
+    <AuthKeyboardAwareScrollView contentContainerStyle={styles.scrollContent}>
       <ProgressStepper currentStep={1} totalSteps={5} />
 
       <Animated.View entering={FadeInDown.duration(600).delay(100)} style={styles.header}>
@@ -133,7 +133,7 @@ export default function KYCNameScreen({ navigation }: KYCNameScreenProps) {
           </ThemedText>
         </AnimatedPressable>
       </Animated.View>
-    </ScreenKeyboardAwareScrollView>
+    </AuthKeyboardAwareScrollView>
   );
 }
 
