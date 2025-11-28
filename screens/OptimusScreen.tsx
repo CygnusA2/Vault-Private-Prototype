@@ -51,6 +51,7 @@ export default function OptimusScreen() {
     <AuthScreenScrollView style={styles.screenBackground} contentContainerStyle={styles.scrollContent}>
       <Animated.View entering={FadeInDown.duration(400)} style={styles.header}>
         <View style={styles.headerLeft}>
+          <ThemedText style={styles.timeText}>9:41</ThemedText>
           <ThemedText style={styles.backText}>Back</ThemedText>
         </View>
         <View style={styles.headerCenter}>
@@ -58,6 +59,7 @@ export default function OptimusScreen() {
           <ThemedText style={styles.subtitle}>Powered by Pier</ThemedText>
         </View>
         <View style={styles.headerRight}>
+          <Feather name="battery" size={18} color={Colors.dark.text} />
           <Feather name="user" size={20} color={Colors.dark.text} />
         </View>
       </Animated.View>
@@ -316,6 +318,13 @@ const styles = StyleSheet.create({
   },
   headerLeft: {
     flex: 1,
+    alignItems: "flex-start",
+  },
+  timeText: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: Colors.dark.text,
+    marginBottom: 2,
   },
   backText: {
     fontSize: 16,
