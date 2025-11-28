@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet, Pressable, ScrollView } from "react-native";
+import { View, StyleSheet, Pressable, TextInput } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
-  withDelay,
+  withRepeat,
+  withSequence,
   withTiming,
   FadeInDown,
   FadeIn,
@@ -37,29 +38,107 @@ const ACTION_BUTTONS = [
   { id: "transfer", label: "Transfer", fullWidth: true },
 ];
 
+const INITIAL_PROPERTY1 = 5000000;
+const INITIAL_PROPERTY2 = 2000000;
+
 export default function LedgerTokenScreen() {
   const { setNeedsLedgerToken, setNeedsOptimus } = useAuth();
-  const [transformActive, setTransformActive] = useState(false);
-  const [reverseActive, setReverseActive] = useState(false);
-  const [convertActive, setConvertActive] = useState(false);
+  
+  const [property1Value, setProperty1Value] = useState(INITIAL_PROPERTY1);
+  const [property2Value, setProperty2Value] = useState(INITIAL_PROPERTY2);
+  const [transformed1, setTransformed1] = useState("");
+  const [transformed2, setTransformed2] = useState("");
+  const [reversedValue, setReversedValue] = useState("");
+  const [propertyReverse, setPropertyReverse] = useState("");
+  
+  const [showConvertHighlight, setShowConvertHighlight] = useState(false);
+  const [conversionDone, setConversionDone] = useState(false);
+  const [showOptimusHighlight, setShowOptimusHighlight] = useState(false);
 
-  const handleTransform = () => {
-    setTransformActive(true);
-    setTimeout(() => setTransformActive(false), 500);
+  const pulseAnim = useSharedValue(1);
+
+  useEffect(() => {
+    if (showConvertHighlight || showOptimusHighlight) {
+      pulseAnim.value = withRepeat(
+        withSequence(
+          withTiming(1.05, { duration: 600 }),
+          withTiming(1, { duration: 600 })
+        ),
+        -1,
+        true
+      );
+    }
+  }, [showConvertHighlight, showOptimusHighlight]);
+
+  const pulseStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pulseAnim.value }],
+  }));
+
+  useEffect(() => {
+    const t1Num = parseFloat(transformed1.replace(/,/g, "")) || 0;
+    const t2Num = parseFloat(transformed2.replace(/,/g, "")) || 0;
+    
+    if (t1Num > 0 || t2Num > 0) {
+      setShowConvertHighlight(true);
+    }
+  }, [transformed1, transformed2]);
+
+  const handleTransformed1Change = (text: string) => {
+    const numericText = text.replace(/[^0-9]/g, "");
+    const numValue = parseInt(numericText) || 0;
+    
+    if (numValue <= INITIAL_PROPERTY1) {
+      setTransformed1(numericText ? formatNumber(numValue) : "");
+      setProperty1Value(INITIAL_PROPERTY1 - numValue);
+    }
   };
 
-  const handleReverse = () => {
-    setReverseActive(true);
-    setTimeout(() => setReverseActive(false), 500);
+  const handleTransformed2Change = (text: string) => {
+    const numericText = text.replace(/[^0-9]/g, "");
+    const numValue = parseInt(numericText) || 0;
+    
+    if (numValue <= INITIAL_PROPERTY2) {
+      setTransformed2(numericText ? formatNumber(numValue) : "");
+      setProperty2Value(INITIAL_PROPERTY2 - numValue);
+    }
   };
 
-  const handleConvert = () => {
-    setConvertActive(true);
-    setTimeout(() => {
-      setConvertActive(false);
-      setNeedsLedgerToken(false);
-      setNeedsOptimus(true);
-    }, 1500);
+  const formatNumber = (num: number): string => {
+    return num.toLocaleString("en-GB");
+  };
+
+  const formatCurrency = (num: number): string => {
+    return `£ ${(num / 1000).toFixed(3).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
+  };
+
+  const handleConvertAction = (type: "partially" | "entire") => {
+    const t1Num = parseFloat(transformed1.replace(/,/g, "")) || 0;
+    const t2Num = parseFloat(transformed2.replace(/,/g, "")) || 0;
+    
+    if (type === "entire") {
+      setTransformed1("");
+      setTransformed2("");
+      setReversedValue(formatNumber(t1Num + t2Num));
+    } else {
+      const partialAmount = Math.floor((t1Num + t2Num) / 2);
+      const remaining = (t1Num + t2Num) - partialAmount;
+      setReversedValue(formatNumber(partialAmount));
+      if (remaining > 0) {
+        setTransformed1(formatNumber(remaining));
+      } else {
+        setTransformed1("");
+      }
+      setTransformed2("");
+    }
+    
+    setShowConvertHighlight(false);
+    setConversionDone(true);
+    setShowOptimusHighlight(true);
+  };
+
+  const handleOptimusPress = () => {
+    setNeedsLedgerToken(false);
+    setNeedsOptimus(true);
   };
 
   return (
@@ -80,15 +159,30 @@ export default function LedgerTokenScreen() {
       <Animated.View entering={FadeInDown.duration(400).delay(100)} style={styles.navigationContainer}>
         <View style={styles.navigationPills}>
           {NAVIGATION_PILLS.slice(0, 3).map((pill) => (
-            <View 
-              key={pill.id} 
-              style={[
-                styles.navPill, 
-                pill.id === "optimus" && styles.navPillActive
-              ]}
+            <Pressable
+              key={pill.id}
+              onPress={pill.id === "optimus" && showOptimusHighlight ? handleOptimusPress : undefined}
             >
-              <ThemedText style={styles.navPillText}>{pill.label}</ThemedText>
-            </View>
+              <Animated.View 
+                style={[
+                  styles.navPill, 
+                  pill.id === "optimus" && showOptimusHighlight && styles.navPillHighlighted,
+                  pill.id === "optimus" && showOptimusHighlight && pulseStyle,
+                ]}
+              >
+                <ThemedText style={[
+                  styles.navPillText,
+                  pill.id === "optimus" && showOptimusHighlight && styles.navPillTextHighlighted
+                ]}>
+                  {pill.label}
+                </ThemedText>
+                {pill.id === "optimus" && showOptimusHighlight ? (
+                  <View style={styles.nextStepBadge}>
+                    <Feather name="arrow-right" size={10} color="#1a1a1a" />
+                  </View>
+                ) : null}
+              </Animated.View>
+            </Pressable>
           ))}
         </View>
         <View style={styles.navigationPills}>
@@ -101,24 +195,29 @@ export default function LedgerTokenScreen() {
       </Animated.View>
 
       <Animated.View entering={FadeInDown.duration(400).delay(200)} style={styles.mainContent}>
-        <PrimaryButton 
-          label="Transform" 
-          onPress={handleTransform} 
-          isActive={transformActive}
-        />
+        <View style={styles.sectionTitle}>
+          <ThemedText style={styles.sectionTitleText}>Transform</ThemedText>
+        </View>
 
         <View style={styles.propertySection}>
           <View style={styles.propertyRow}>
             <View style={styles.propertyColumn}>
               <ThemedText style={styles.propertyLabel}>Property 1 Value</ThemedText>
               <View style={styles.valuePillSecondary}>
-                <ThemedText style={styles.valuePillText}>£ 5,000.000</ThemedText>
+                <ThemedText style={styles.valuePillText}>{formatCurrency(property1Value)}</ThemedText>
               </View>
             </View>
             <View style={styles.propertyColumn}>
               <ThemedText style={styles.propertyLabel}>Transformed Value</ThemedText>
-              <View style={styles.valuePillGreen}>
-                <ThemedText style={styles.valuePillText}>CST 3,000</ThemedText>
+              <View style={styles.valuePillInput}>
+                <TextInput
+                  style={styles.inputText}
+                  value={transformed1}
+                  onChangeText={handleTransformed1Change}
+                  placeholder="Type amount"
+                  placeholderTextColor="rgba(232, 213, 183, 0.4)"
+                  keyboardType="numeric"
+                />
               </View>
             </View>
           </View>
@@ -127,53 +226,99 @@ export default function LedgerTokenScreen() {
             <View style={styles.propertyColumn}>
               <ThemedText style={styles.propertyLabel}>Property 2 Value</ThemedText>
               <View style={styles.valuePillSecondary}>
-                <ThemedText style={styles.valuePillText}>£ 2,000.000</ThemedText>
+                <ThemedText style={styles.valuePillText}>{formatCurrency(property2Value)}</ThemedText>
               </View>
             </View>
             <View style={styles.propertyColumn}>
               <ThemedText style={styles.propertyLabel}>Transformed Value</ThemedText>
-              <View style={styles.valuePillGreen}>
-                <ThemedText style={styles.valuePillText}>CST 150,000</ThemedText>
+              <View style={styles.valuePillInput}>
+                <TextInput
+                  style={styles.inputText}
+                  value={transformed2}
+                  onChangeText={handleTransformed2Change}
+                  placeholder="Type amount"
+                  placeholderTextColor="rgba(232, 213, 183, 0.4)"
+                  keyboardType="numeric"
+                />
               </View>
             </View>
           </View>
         </View>
 
-        <PrimaryButton 
-          label="Reverse" 
-          onPress={handleReverse}
-          isActive={reverseActive}
-        />
+        <View style={styles.sectionTitle}>
+          <ThemedText style={styles.sectionTitleText}>Reverse</ThemedText>
+        </View>
 
         <View style={styles.reverseSection}>
           <View style={styles.propertyRow}>
             <View style={styles.propertyColumn}>
               <ThemedText style={styles.propertyLabel}>Property Value</ThemedText>
               <View style={styles.valuePillPurple}>
-                <ThemedText style={styles.valuePillTextEmpty}> </ThemedText>
+                <ThemedText style={styles.valuePillTextDisplay}>
+                  {propertyReverse || " "}
+                </ThemedText>
               </View>
             </View>
             <View style={styles.propertyColumn}>
               <ThemedText style={styles.propertyLabel}>Reversed Value</ThemedText>
               <View style={styles.valuePillCream}>
-                <ThemedText style={styles.valuePillTextEmpty}> </ThemedText>
+                <ThemedText style={styles.valuePillTextDisplay}>
+                  {reversedValue ? `CST ${reversedValue}` : " "}
+                </ThemedText>
               </View>
             </View>
           </View>
         </View>
 
-        <PrimaryButton 
-          label="Convert into Cash" 
-          onPress={handleConvert}
-          isActive={convertActive}
-        />
+        <View style={styles.sectionTitle}>
+          <ThemedText style={styles.sectionTitleText}>Convert into Cash</ThemedText>
+        </View>
 
         <Animated.View entering={FadeInDown.duration(400).delay(300)} style={styles.actionGrid}>
           <View style={styles.actionGridRow}>
-            {ACTION_BUTTONS.slice(0, 2).map((btn) => (
-              <ActionButton key={btn.id} label={btn.label} />
-            ))}
+            <AnimatedPressable
+              onPress={() => handleConvertAction("partially")}
+              style={[
+                styles.actionButton,
+                showConvertHighlight && styles.actionButtonHighlighted,
+                showConvertHighlight && pulseStyle,
+              ]}
+            >
+              <ThemedText style={[
+                styles.actionButtonText,
+                showConvertHighlight && styles.actionButtonTextHighlighted
+              ]}>
+                Partially
+              </ThemedText>
+              {showConvertHighlight ? (
+                <View style={styles.highlightIndicator}>
+                  <Feather name="edit-3" size={10} color="#1a1a1a" />
+                </View>
+              ) : null}
+            </AnimatedPressable>
+            
+            <AnimatedPressable
+              onPress={() => handleConvertAction("entire")}
+              style={[
+                styles.actionButton,
+                showConvertHighlight && styles.actionButtonHighlighted,
+                showConvertHighlight && pulseStyle,
+              ]}
+            >
+              <ThemedText style={[
+                styles.actionButtonText,
+                showConvertHighlight && styles.actionButtonTextHighlighted
+              ]}>
+                Entire Amount
+              </ThemedText>
+              {showConvertHighlight ? (
+                <View style={styles.highlightIndicator}>
+                  <Feather name="edit-3" size={10} color="#1a1a1a" />
+                </View>
+              ) : null}
+            </AnimatedPressable>
           </View>
+          
           <View style={styles.actionGridRow}>
             {ACTION_BUTTONS.slice(2, 4).map((btn) => (
               <ActionButton key={btn.id} label={btn.label} />
@@ -188,6 +333,24 @@ export default function LedgerTokenScreen() {
             <ActionButton label="Transfer" fullWidth />
           </View>
         </Animated.View>
+
+        {showConvertHighlight ? (
+          <Animated.View entering={FadeIn.duration(300)} style={styles.hintContainer}>
+            <Feather name="arrow-up" size={14} color="#4ade80" />
+            <ThemedText style={styles.hintText}>
+              Click Partially or Entire Amount to convert your transformed value to cash
+            </ThemedText>
+          </Animated.View>
+        ) : null}
+
+        {showOptimusHighlight ? (
+          <Animated.View entering={FadeIn.duration(300)} style={styles.hintContainer}>
+            <Feather name="arrow-up" size={14} color="#4ade80" />
+            <ThemedText style={styles.hintText}>
+              Tap Optimus above to see where your cash will be displayed
+            </ThemedText>
+          </Animated.View>
+        ) : null}
       </Animated.View>
 
       <Animated.View entering={FadeIn.duration(400).delay(400)} style={styles.screenNavigation}>
@@ -197,42 +360,6 @@ export default function LedgerTokenScreen() {
         <View style={styles.navDot} />
       </Animated.View>
     </AuthScreenScrollView>
-  );
-}
-
-function PrimaryButton({ 
-  label, 
-  onPress, 
-  isActive = false 
-}: { 
-  label: string; 
-  onPress: () => void; 
-  isActive?: boolean;
-}) {
-  const scale = useSharedValue(1);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
-
-  return (
-    <AnimatedPressable
-      onPressIn={() => {
-        scale.value = withSpring(0.95);
-      }}
-      onPressOut={() => {
-        scale.value = withSpring(1);
-      }}
-      onPress={onPress}
-      style={[styles.primaryButton, animatedStyle]}
-    >
-      <LinearGradient
-        colors={isActive ? ["#22c55e", "#4ade80"] : ["#4ade80", "#22c55e"]}
-        style={styles.primaryButtonGradient}
-      >
-        <ThemedText style={styles.primaryButtonText}>{label}</ThemedText>
-      </LinearGradient>
-    </AnimatedPressable>
   );
 }
 
@@ -319,10 +446,18 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
     borderWidth: 1,
     borderColor: "rgba(168, 196, 181, 0.3)",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs,
   },
-  navPillActive: {
-    backgroundColor: "rgba(74, 222, 128, 0.15)",
-    borderColor: "rgba(74, 222, 128, 0.5)",
+  navPillHighlighted: {
+    backgroundColor: "#4ade80",
+    borderColor: "#4ade80",
+    shadowColor: "#4ade80",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 15,
+    elevation: 8,
   },
   navPillText: {
     fontSize: 11,
@@ -330,32 +465,32 @@ const styles = StyleSheet.create({
     color: Colors.dark.text,
     letterSpacing: 0.3,
   },
+  navPillTextHighlighted: {
+    color: "#1a1a1a",
+    fontWeight: "500",
+  },
+  nextStepBadge: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: "rgba(0, 0, 0, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
   mainContent: {
     paddingHorizontal: Spacing.lg,
     gap: Spacing.lg,
   },
-  primaryButton: {
-    borderRadius: BorderRadius.full,
-    overflow: "hidden",
-    shadowColor: "#4ade80",
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 5,
-  },
-  primaryButtonGradient: {
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.xl,
+  sectionTitle: {
     alignItems: "center",
-    borderRadius: BorderRadius.full,
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.2)",
+    paddingVertical: Spacing.sm,
   },
-  primaryButtonText: {
+  sectionTitleText: {
     fontSize: 14,
     fontWeight: "400",
-    color: Colors.dark.text,
-    letterSpacing: 0.5,
+    color: "#A8C4B5",
+    letterSpacing: 1,
+    textTransform: "uppercase",
   },
   propertySection: {
     gap: Spacing.xl,
@@ -389,7 +524,7 @@ const styles = StyleSheet.create({
     shadowRadius: 20,
     elevation: 3,
   },
-  valuePillGreen: {
+  valuePillInput: {
     paddingVertical: Spacing.sm,
     paddingHorizontal: Spacing.md,
     borderRadius: BorderRadius.full,
@@ -401,6 +536,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.12,
     shadowRadius: 20,
     elevation: 3,
+  },
+  inputText: {
+    fontSize: 13,
+    fontWeight: "400",
+    color: "#E8D5B7",
+    letterSpacing: 0.5,
+    textAlign: "center",
+    padding: 0,
   },
   valuePillPurple: {
     paddingVertical: Spacing.lg,
@@ -435,12 +578,13 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     textAlign: "center",
   },
-  valuePillTextEmpty: {
+  valuePillTextDisplay: {
     fontSize: 13,
     fontWeight: "400",
     color: "#E8D5B7",
     letterSpacing: 0.5,
     textAlign: "center",
+    minHeight: 18,
   },
   reverseSection: {
     marginTop: Spacing.sm,
@@ -465,6 +609,18 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(168, 196, 181, 0.3)",
     alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: Spacing.xs,
+  },
+  actionButtonHighlighted: {
+    backgroundColor: "#4ade80",
+    borderColor: "#4ade80",
+    shadowColor: "#4ade80",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 15,
+    elevation: 8,
   },
   actionButtonFullWidth: {
     flex: 1,
@@ -474,6 +630,36 @@ const styles = StyleSheet.create({
     fontWeight: "300",
     color: Colors.dark.text,
     letterSpacing: 0.3,
+  },
+  actionButtonTextHighlighted: {
+    color: "#1a1a1a",
+    fontWeight: "500",
+  },
+  highlightIndicator: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: "rgba(0, 0, 0, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  hintContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.sm,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    backgroundColor: "rgba(74, 222, 128, 0.1)",
+    borderRadius: BorderRadius.md,
+    marginTop: Spacing.md,
+  },
+  hintText: {
+    fontSize: 12,
+    fontWeight: "300",
+    color: "#4ade80",
+    textAlign: "center",
+    flex: 1,
   },
   screenNavigation: {
     flexDirection: "row",
