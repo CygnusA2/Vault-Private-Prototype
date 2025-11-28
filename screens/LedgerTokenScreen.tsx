@@ -21,11 +21,12 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 const NAVIGATION_PILLS = [
   { id: "full-wallet", label: "Full Wallet" },
+  { id: "illiquid-assets", label: "Illiquid Assets" },
   { id: "optimus", label: "Optimus" },
   { id: "risk-metrics", label: "Risk Metrics" },
   { id: "blocks", label: "Blocks" },
   { id: "card-m", label: "Card M" },
-  { id: "sentinel", label: "Sentinel" },
+  { id: "sentinel-transfer", label: "Sentinel Transfer" },
 ];
 
 const ACTION_BUTTONS = [
@@ -168,7 +169,7 @@ export default function LedgerTokenScreen() {
   };
 
   return (
-    <AuthScreenScrollView contentContainerStyle={styles.scrollContent}>
+    <AuthScreenScrollView style={styles.screenBackground} contentContainerStyle={styles.scrollContent}>
       <Animated.View entering={FadeInDown.duration(400)} style={styles.header}>
         <View style={styles.headerLeft}>
           <ThemedText style={styles.backText}>Back</ThemedText>
@@ -217,6 +218,11 @@ export default function LedgerTokenScreen() {
               <ThemedText style={styles.navPillText}>{pill.label}</ThemedText>
             </View>
           ))}
+        </View>
+        <View style={styles.navigationPills}>
+          <View style={styles.navPill}>
+            <ThemedText style={styles.navPillText}>{NAVIGATION_PILLS[6].label}</ThemedText>
+          </View>
         </View>
       </Animated.View>
 
@@ -378,13 +384,6 @@ export default function LedgerTokenScreen() {
           </Animated.View>
         ) : null}
       </Animated.View>
-
-      <Animated.View entering={FadeIn.duration(400).delay(400)} style={styles.screenNavigation}>
-        <View style={styles.navDot} />
-        <View style={[styles.navDot, styles.navDotActive]} />
-        <View style={styles.navDot} />
-        <View style={styles.navDot} />
-      </Animated.View>
     </AuthScreenScrollView>
   );
 }
@@ -416,6 +415,9 @@ function ActionButton({ label, fullWidth = false }: { label: string; fullWidth?:
 }
 
 const styles = StyleSheet.create({
+  screenBackground: {
+    backgroundColor: "#0d3612",
+  },
   scrollContent: {
     paddingBottom: Spacing["3xl"],
   },
@@ -694,27 +696,5 @@ const styles = StyleSheet.create({
     color: "#4ade80",
     textAlign: "center",
     flex: 1,
-  },
-  screenNavigation: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    gap: Spacing.sm,
-    marginTop: Spacing["2xl"],
-    paddingVertical: Spacing.md,
-  },
-  navDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "rgba(168, 196, 181, 0.3)",
-  },
-  navDotActive: {
-    backgroundColor: "#4ade80",
-    shadowColor: "#4ade80",
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
-    shadowRadius: 6,
-    elevation: 3,
   },
 });

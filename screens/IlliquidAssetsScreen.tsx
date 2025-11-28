@@ -52,7 +52,7 @@ export default function IlliquidAssetsScreen() {
   };
 
   return (
-    <AuthScreenScrollView contentContainerStyle={styles.scrollContent}>
+    <AuthScreenScrollView style={styles.screenBackground} contentContainerStyle={styles.scrollContent}>
       <Animated.View entering={FadeInDown.duration(400)} style={styles.header}>
         <View style={styles.headerLeft}>
           <ThemedText style={styles.backText}>Back</ThemedText>
@@ -267,6 +267,9 @@ function TransformButton({ onPress }: { onPress: () => void }) {
 }
 
 const styles = StyleSheet.create({
+  screenBackground: {
+    backgroundColor: "#0d3612",
+  },
   scrollContent: {
     paddingBottom: Spacing["3xl"],
   },

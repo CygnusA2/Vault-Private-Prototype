@@ -18,11 +18,12 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 const NAVIGATION_PILLS = [
   { id: "full-wallet", label: "Full Wallet" },
-  { id: "optimus", label: "Optimus", active: true },
+  { id: "illiquid-assets", label: "Illiquid Assets" },
+  { id: "ledger-token", label: "Ledger Token" },
   { id: "risk-metrics", label: "Risk Metrics" },
   { id: "blocks", label: "Blocks" },
   { id: "card-m", label: "Card M" },
-  { id: "sentinel", label: "Sentinel" },
+  { id: "sentinel-transfer", label: "Sentinel Transfer" },
 ];
 
 const ACTION_BUTTONS = [
@@ -47,7 +48,7 @@ export default function OptimusScreen() {
   };
 
   return (
-    <AuthScreenScrollView contentContainerStyle={styles.scrollContent}>
+    <AuthScreenScrollView style={styles.screenBackground} contentContainerStyle={styles.scrollContent}>
       <Animated.View entering={FadeInDown.duration(400)} style={styles.header}>
         <View style={styles.headerLeft}>
           <ThemedText style={styles.backText}>Back</ThemedText>
@@ -64,10 +65,8 @@ export default function OptimusScreen() {
       <Animated.View entering={FadeInDown.duration(400).delay(100)} style={styles.navigationContainer}>
         <View style={styles.navigationPills}>
           {NAVIGATION_PILLS.slice(0, 3).map((pill) => (
-            <View key={pill.id} style={[styles.navPill, pill.active && styles.navPillActive]}>
-              <ThemedText style={[styles.navPillText, pill.active && styles.navPillTextActive]}>
-                {pill.label}
-              </ThemedText>
+            <View key={pill.id} style={styles.navPill}>
+              <ThemedText style={styles.navPillText}>{pill.label}</ThemedText>
             </View>
           ))}
         </View>
@@ -77,6 +76,11 @@ export default function OptimusScreen() {
               <ThemedText style={styles.navPillText}>{pill.label}</ThemedText>
             </View>
           ))}
+        </View>
+        <View style={styles.navigationPills}>
+          <View style={styles.navPill}>
+            <ThemedText style={styles.navPillText}>{NAVIGATION_PILLS[6].label}</ThemedText>
+          </View>
         </View>
       </Animated.View>
 
@@ -101,15 +105,6 @@ export default function OptimusScreen() {
                   ? `£ ${formatNumber(convertedAmounts.property1Converted)}`
                   : "0"}
               </ThemedText>
-            </View>
-          </View>
-
-          <View style={styles.addButtonsRow}>
-            <View style={styles.addButtonContainer}>
-              <AddButton />
-            </View>
-            <View style={styles.addButtonContainer}>
-              <AddButton />
             </View>
           </View>
 
@@ -153,13 +148,6 @@ export default function OptimusScreen() {
         </Animated.View>
 
       </View>
-
-      <Animated.View entering={FadeIn.duration(400).delay(350)} style={styles.screenNavigation}>
-        <View style={styles.navDot} />
-        <View style={styles.navDot} />
-        <View style={[styles.navDot, styles.navDotActive]} />
-        <View style={styles.navDot} />
-      </Animated.View>
     </AuthScreenScrollView>
   );
 }
@@ -312,6 +300,9 @@ function MarketChart({ market, index }: { market: typeof MARKET_DATA[0]; index: 
 }
 
 const styles = StyleSheet.create({
+  screenBackground: {
+    backgroundColor: "#0d3612",
+  },
   scrollContent: {
     paddingBottom: Spacing["3xl"],
   },
@@ -369,19 +360,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(168, 196, 181, 0.3)",
   },
-  navPillActive: {
-    backgroundColor: "rgba(74, 222, 128, 0.2)",
-    borderColor: "#4ade80",
-  },
   navPillText: {
     fontSize: 11,
     fontWeight: "300",
     color: Colors.dark.text,
     letterSpacing: 0.3,
-  },
-  navPillTextActive: {
-    color: "#4ade80",
-    fontWeight: "400",
   },
   mainContent: {
     paddingHorizontal: Spacing.lg,
@@ -541,27 +524,5 @@ const styles = StyleSheet.create({
   chartContainer: {
     height: 60,
     overflow: "hidden",
-  },
-  screenNavigation: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    gap: Spacing.sm,
-    marginTop: Spacing["2xl"],
-    paddingVertical: Spacing.md,
-  },
-  navDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "rgba(168, 196, 181, 0.3)",
-  },
-  navDotActive: {
-    backgroundColor: "#4ade80",
-    shadowColor: "#4ade80",
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
-    shadowRadius: 6,
-    elevation: 3,
   },
 });
