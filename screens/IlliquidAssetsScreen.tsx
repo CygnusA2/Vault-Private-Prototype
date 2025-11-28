@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { View, StyleSheet, Pressable } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -6,11 +6,11 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
-  withRepeat,
-  withSequence,
   withTiming,
+  withDelay,
   FadeInDown,
   FadeIn,
+  interpolate,
 } from "react-native-reanimated";
 import { AuthScreenScrollView } from "@/components/AuthScreenScrollView";
 import { ThemedText } from "@/components/ThemedText";
@@ -19,526 +19,456 @@ import { useAuth } from "@/context/AuthContext";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-const ILLIQUID_ASSETS = [
-  { 
-    id: "realestate", 
-    name: "Real Estate Portfolio", 
-    value: "$4,250,000",
-    type: "Property",
-    status: "verified",
-    icon: "home" as const,
-  },
-  { 
-    id: "art", 
-    name: "Art Collection", 
-    value: "$1,850,000",
-    type: "Fine Art",
-    status: "pending",
-    icon: "image" as const,
-  },
-  { 
-    id: "privateeq", 
-    name: "Private Equity Holdings", 
-    value: "$2,500,000",
-    type: "Investment",
-    status: "verified",
-    icon: "briefcase" as const,
-  },
-  { 
-    id: "wine", 
-    name: "Wine Collection", 
-    value: "$320,000",
-    type: "Collectibles",
-    status: "pending",
-    icon: "droplet" as const,
-  },
+const NAVIGATION_PILLS = [
+  "Full Wallet",
+  "Optimus",
+  "Ledger Token",
+  "Risk Metrics",
+  "Blocks",
+  "Card M",
+  "Sentinel Transfer",
+];
+
+const ASSETS = [
+  { id: 1, amount: "$34 M", name: "Chelsea Mansion", progress: 75, layout: "left" as const },
+  { id: 2, amount: "$200 M", name: "Mona Lisa Yacht", progress: 60, layout: "right" as const },
+  { id: 3, amount: "$105 M", name: "Picasso Art", progress: 85, layout: "left" as const },
 ];
 
 export default function IlliquidAssetsScreen() {
   const { setNeedsIlliquidAssets, setNeedsLedgerToken } = useAuth();
-  const [analyzedAssets, setAnalyzedAssets] = useState<string[]>([]);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [currentAnalysis, setCurrentAnalysis] = useState<string | null>(null);
-  const pulseAnim = useSharedValue(1);
 
-  const totalValue = "$8,920,000";
-  const verifiedAssets = ILLIQUID_ASSETS.filter(a => analyzedAssets.includes(a.id)).length;
-  const allAnalyzed = analyzedAssets.length === ILLIQUID_ASSETS.length;
-
-  useEffect(() => {
-    if (isAnalyzing) {
-      pulseAnim.value = withRepeat(
-        withSequence(
-          withTiming(1.02, { duration: 500 }),
-          withTiming(1, { duration: 500 })
-        ),
-        -1,
-        false
-      );
-    } else {
-      pulseAnim.value = 1;
-    }
-  }, [isAnalyzing]);
-
-  useEffect(() => {
-    if (allAnalyzed) {
-      const timer = setTimeout(() => {
-        setNeedsIlliquidAssets(false);
-        setNeedsLedgerToken(true);
-      }, 1500);
-      return () => clearTimeout(timer);
-    }
-  }, [allAnalyzed]);
-
-  const handleAnalyzeAsset = (assetId: string) => {
-    if (analyzedAssets.includes(assetId) || isAnalyzing) return;
-    
-    setIsAnalyzing(true);
-    setCurrentAnalysis(assetId);
-    
-    setTimeout(() => {
-      setAnalyzedAssets(prev => [...prev, assetId]);
-      setIsAnalyzing(false);
-      setCurrentAnalysis(null);
-    }, 1500);
-  };
-
-  const handleAnalyzeAll = () => {
-    if (isAnalyzing) return;
-    
-    const remaining = ILLIQUID_ASSETS.filter(a => !analyzedAssets.includes(a.id));
-    if (remaining.length === 0) return;
-
-    setIsAnalyzing(true);
-    let index = 0;
-
-    const analyzeNext = () => {
-      if (index >= remaining.length) {
-        setIsAnalyzing(false);
-        setCurrentAnalysis(null);
-        return;
-      }
-      
-      setCurrentAnalysis(remaining[index].id);
-      setTimeout(() => {
-        setAnalyzedAssets(prev => [...prev, remaining[index].id]);
-        index++;
-        analyzeNext();
-      }, 800);
-    };
-
-    analyzeNext();
-  };
-
-  const handleContinue = () => {
+  const handleTransform = () => {
     setNeedsIlliquidAssets(false);
     setNeedsLedgerToken(true);
   };
 
   return (
     <AuthScreenScrollView contentContainerStyle={styles.scrollContent}>
-      <Animated.View entering={FadeInDown.duration(500).delay(100)} style={styles.header}>
-        <View style={styles.iconBadge}>
-          <Feather name="layers" size={28} color={Colors.dark.primary} />
+      <Animated.View entering={FadeInDown.duration(400)} style={styles.header}>
+        <View style={styles.headerLeft}>
+          <ThemedText style={styles.backText}>Back</ThemedText>
         </View>
-        <ThemedText style={styles.title}>Illiquid Assets</ThemedText>
-        <ThemedText style={styles.subtitle}>
-          AI Agent is analyzing your illiquid asset portfolio for tokenization eligibility
-        </ThemedText>
-      </Animated.View>
-
-      <Animated.View entering={FadeInDown.duration(500).delay(200)} style={styles.summaryCard}>
-        <View style={styles.summaryRow}>
-          <ThemedText style={styles.summaryLabel}>TOTAL PORTFOLIO VALUE</ThemedText>
-          <ThemedText style={styles.summaryValue}>{totalValue}</ThemedText>
+        <View style={styles.headerCenter}>
+          <ThemedText style={styles.title}>Illiquid Assets</ThemedText>
+          <ThemedText style={styles.subtitle}>Powered by Marcus</ThemedText>
         </View>
-        <View style={styles.summaryDivider} />
-        <View style={styles.summaryRow}>
-          <ThemedText style={styles.summaryLabel}>ASSETS VERIFIED</ThemedText>
-          <ThemedText style={styles.summaryValue}>{verifiedAssets} / {ILLIQUID_ASSETS.length}</ThemedText>
+        <View style={styles.headerRight}>
+          <Feather name="users" size={20} color={Colors.dark.text} />
         </View>
       </Animated.View>
 
-      <Animated.View entering={FadeInDown.duration(500).delay(300)}>
-        <View style={styles.sectionHeader}>
-          <ThemedText style={styles.sectionLabel}>ASSET PORTFOLIO</ThemedText>
-          {!allAnalyzed ? (
-            <Pressable onPress={handleAnalyzeAll} disabled={isAnalyzing}>
-              <ThemedText style={[styles.analyzeAllText, isAnalyzing && styles.textDisabled]}>
-                Analyze All
-              </ThemedText>
-            </Pressable>
-          ) : null}
-        </View>
-        
-        <View style={styles.assetsList}>
-          {ILLIQUID_ASSETS.map((asset, index) => (
-            <AssetItem
-              key={asset.id}
-              asset={asset}
-              isAnalyzed={analyzedAssets.includes(asset.id)}
-              isAnalyzing={currentAnalysis === asset.id}
-              onAnalyze={() => handleAnalyzeAsset(asset.id)}
-              delay={index * 100}
-            />
+      <Animated.View entering={FadeInDown.duration(400).delay(100)} style={styles.navigationContainer}>
+        <View style={styles.navigationPills}>
+          {NAVIGATION_PILLS.slice(0, 3).map((pill, index) => (
+            <View key={pill} style={styles.navPill}>
+              <ThemedText style={styles.navPillText}>{pill}</ThemedText>
+            </View>
           ))}
         </View>
+        <View style={styles.navigationPills}>
+          {NAVIGATION_PILLS.slice(3, 6).map((pill, index) => (
+            <View key={pill} style={styles.navPill}>
+              <ThemedText style={styles.navPillText}>{pill}</ThemedText>
+            </View>
+          ))}
+        </View>
+        <View style={styles.navigationPillsCenter}>
+          <View key={NAVIGATION_PILLS[6]} style={styles.navPill}>
+            <ThemedText style={styles.navPillText}>{NAVIGATION_PILLS[6]}</ThemedText>
+          </View>
+        </View>
       </Animated.View>
 
-      <Animated.View entering={FadeInDown.duration(500).delay(500)} style={styles.infoCard}>
-        <Feather name="cpu" size={18} color={Colors.dark.primary} />
-        <ThemedText style={styles.infoText}>
-          Our AI Agent verifies asset authenticity, ownership documentation, and calculates tokenization potential based on market conditions.
-        </ThemedText>
-      </Animated.View>
+      <View style={styles.assetsContainer}>
+        {ASSETS.map((asset, index) => (
+          <AssetRow key={asset.id} asset={asset} index={index} />
+        ))}
+      </View>
 
-      <View style={styles.spacer} />
-
-      {allAnalyzed ? (
-        <Animated.View entering={FadeIn.duration(400)} style={styles.successBanner}>
-          <Feather name="check-circle" size={20} color={Colors.dark.successBright} />
-          <ThemedText style={styles.successText}>
-            All assets verified - Proceeding to tokenization...
-          </ThemedText>
-        </Animated.View>
-      ) : (
-        <ContinueButton onPress={handleContinue} disabled={!allAnalyzed} />
-      )}
+      <View style={styles.bottomSection}>
+        <View style={styles.transformButtonContainer}>
+          <TransformButton onPress={handleTransform} />
+        </View>
+        <View style={styles.cylindersContainer}>
+          <Cylinder delay={600} />
+          <View style={styles.cylinderSpacer} />
+          <Cylinder delay={800} />
+        </View>
+      </View>
     </AuthScreenScrollView>
   );
 }
 
-function AssetItem({
-  asset,
-  isAnalyzed,
-  isAnalyzing,
-  onAnalyze,
-  delay,
-}: {
-  asset: typeof ILLIQUID_ASSETS[0];
-  isAnalyzed: boolean;
-  isAnalyzing: boolean;
-  onAnalyze: () => void;
-  delay: number;
-}) {
-  const scale = useSharedValue(1);
-  const pulseAnim = useSharedValue(1);
+function AssetRow({ asset, index }: { asset: typeof ASSETS[0]; index: number }) {
+  const progressWidth = useSharedValue(0);
 
   useEffect(() => {
-    if (isAnalyzing) {
-      pulseAnim.value = withRepeat(
-        withSequence(
-          withTiming(1.02, { duration: 400 }),
-          withTiming(1, { duration: 400 })
-        ),
-        -1,
-        false
-      );
-    } else {
-      pulseAnim.value = 1;
-    }
-  }, [isAnalyzing]);
+    progressWidth.value = withDelay(
+      index * 150 + 300,
+      withTiming(asset.progress, { duration: 1000 })
+    );
+  }, []);
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value * pulseAnim.value }],
+  const progressStyle = useAnimatedStyle(() => ({
+    width: `${progressWidth.value}%`,
+  }));
+
+  const circleScale = useSharedValue(0.8);
+  
+  useEffect(() => {
+    circleScale.value = withDelay(
+      index * 150 + 200,
+      withSpring(1, { damping: 12 })
+    );
+  }, []);
+
+  const circleAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: circleScale.value }],
   }));
 
   return (
-    <Animated.View entering={FadeInDown.duration(400).delay(delay)}>
+    <Animated.View 
+      entering={FadeInDown.duration(400).delay(index * 150 + 200)} 
+      style={styles.assetRow}
+    >
+      {asset.layout === "left" ? (
+        <>
+          <Animated.View style={[styles.amountCircle, circleAnimStyle]}>
+            <LinearGradient
+              colors={["#4ade80", "#22c55e"]}
+              style={styles.circleGradient}
+            >
+              <ThemedText style={styles.amountText}>{asset.amount}</ThemedText>
+            </LinearGradient>
+          </Animated.View>
+
+          <View style={styles.progressBarContainer}>
+            <View style={styles.progressBarTrack}>
+              <Animated.View style={[styles.progressBarFill, progressStyle]}>
+                <LinearGradient
+                  colors={["#4ade80", "#22c55e"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.progressGradient}
+                />
+              </Animated.View>
+            </View>
+          </View>
+
+          <View style={styles.assetNamePill}>
+            <ThemedText style={styles.assetNameText}>{asset.name}</ThemedText>
+          </View>
+        </>
+      ) : (
+        <>
+          <View style={styles.assetNamePill}>
+            <ThemedText style={styles.assetNameText}>{asset.name}</ThemedText>
+          </View>
+
+          <View style={styles.progressBarContainer}>
+            <View style={styles.progressBarTrack}>
+              <Animated.View style={[styles.progressBarFill, progressStyle]}>
+                <LinearGradient
+                  colors={["#4ade80", "#22c55e"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.progressGradient}
+                />
+              </Animated.View>
+            </View>
+          </View>
+
+          <Animated.View style={[styles.amountCircle, circleAnimStyle]}>
+            <LinearGradient
+              colors={["#4ade80", "#22c55e"]}
+              style={styles.circleGradient}
+            >
+              <ThemedText style={styles.amountText}>{asset.amount}</ThemedText>
+            </LinearGradient>
+          </Animated.View>
+        </>
+      )}
+    </Animated.View>
+  );
+}
+
+function Cylinder({ delay }: { delay: number }) {
+  const scale = useSharedValue(0.8);
+  const opacity = useSharedValue(0);
+
+  useEffect(() => {
+    opacity.value = withDelay(delay, withTiming(1, { duration: 500 }));
+    scale.value = withDelay(delay, withSpring(1, { damping: 12 }));
+  }, []);
+
+  const animStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <Animated.View style={[styles.cylinder, animStyle]}>
+      <LinearGradient
+        colors={["#6b7280", "#d1d5db", "#f3f4f6", "#e5e7eb", "#d1d5db", "#9ca3af", "#6b7280"]}
+        start={{ x: 0, y: 0.5 }}
+        end={{ x: 1, y: 0.5 }}
+        style={styles.cylinderBody}
+      >
+        <View style={styles.cylinderTopHighlight} />
+        <View style={styles.cylinderBottomShadow} />
+      </LinearGradient>
+    </Animated.View>
+  );
+}
+
+function TransformButton({ onPress }: { onPress: () => void }) {
+  const scale = useSharedValue(1);
+  const buttonOpacity = useSharedValue(0);
+
+  useEffect(() => {
+    buttonOpacity.value = withDelay(700, withTiming(1, { duration: 500 }));
+  }, []);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+    opacity: buttonOpacity.value,
+  }));
+
+  return (
+    <Animated.View entering={FadeIn.duration(500).delay(700)} style={animatedStyle}>
       <AnimatedPressable
         onPressIn={() => {
-          if (!isAnalyzed && !isAnalyzing) scale.value = withSpring(0.98);
+          scale.value = withSpring(0.95);
         }}
         onPressOut={() => {
           scale.value = withSpring(1);
         }}
-        onPress={onAnalyze}
-        disabled={isAnalyzed || isAnalyzing}
-        style={[
-          styles.assetItem,
-          isAnalyzed && styles.assetItemAnalyzed,
-          isAnalyzing && styles.assetItemAnalyzing,
-          animatedStyle,
-        ]}
+        onPress={onPress}
+        style={styles.transformButtonWrapper}
       >
-        <View style={[styles.assetIcon, isAnalyzed && styles.assetIconAnalyzed]}>
-          <Feather 
-            name={asset.icon} 
-            size={22} 
-            color={isAnalyzed ? Colors.dark.successBright : Colors.dark.cream} 
-          />
-        </View>
-        <View style={styles.assetInfo}>
-          <ThemedText style={styles.assetName}>{asset.name}</ThemedText>
-          <View style={styles.assetMeta}>
-            <ThemedText style={styles.assetType}>{asset.type}</ThemedText>
-            <ThemedText style={styles.assetDot}>{"\u2022"}</ThemedText>
-            <ThemedText style={styles.assetValue}>{asset.value}</ThemedText>
-          </View>
-        </View>
-        <View style={styles.assetStatus}>
-          {isAnalyzing ? (
-            <View style={styles.analyzingBadge}>
-              <Feather name="loader" size={14} color={Colors.dark.primary} />
-            </View>
-          ) : isAnalyzed ? (
-            <Feather name="check-circle" size={20} color={Colors.dark.successBright} />
-          ) : (
-            <ThemedText style={styles.tapToAnalyze}>Tap to analyze</ThemedText>
-          )}
-        </View>
+        <LinearGradient
+          colors={["#4ade80", "#22c55e"]}
+          style={styles.transformButton}
+        >
+          <ThemedText style={styles.transformButtonText}>Transform</ThemedText>
+        </LinearGradient>
       </AnimatedPressable>
     </Animated.View>
   );
 }
 
-function ContinueButton({ onPress, disabled }: { onPress: () => void; disabled?: boolean }) {
-  const scale = useSharedValue(1);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
-
-  return (
-    <AnimatedPressable
-      onPressIn={() => {
-        if (!disabled) scale.value = withSpring(0.97);
-      }}
-      onPressOut={() => {
-        scale.value = withSpring(1);
-      }}
-      onPress={disabled ? undefined : onPress}
-      disabled={disabled}
-      style={[styles.continueButtonContainer, animatedStyle, disabled && styles.continueButtonDisabled]}
-    >
-      <LinearGradient
-        colors={disabled ? ["#666", "#555", "#444"] : [Colors.dark.primary, "#D4B872", "#E5C88A"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={styles.continueButton}
-      >
-        <ThemedText style={[styles.continueButtonText, disabled && styles.continueButtonTextDisabled]}>
-          Analyze all assets to continue
-        </ThemedText>
-      </LinearGradient>
-    </AnimatedPressable>
-  );
-}
-
 const styles = StyleSheet.create({
   scrollContent: {
-    gap: Spacing.xl,
     paddingBottom: Spacing["3xl"],
   },
   header: {
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.sm,
+    marginBottom: Spacing.xl,
   },
-  iconBadge: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: "rgba(201, 169, 97, 0.1)",
-    justifyContent: "center",
+  headerLeft: {
+    flex: 1,
+  },
+  backText: {
+    fontSize: 16,
+    fontWeight: "400",
+    color: Colors.dark.text,
+  },
+  headerCenter: {
     alignItems: "center",
-    marginBottom: Spacing.lg,
+    flex: 2,
   },
   title: {
-    fontSize: 24,
-    fontWeight: "300",
-    color: Colors.dark.cream,
-    letterSpacing: 1,
-    textAlign: "center",
-    marginBottom: Spacing.sm,
-  },
-  subtitle: {
-    fontSize: 14,
-    fontWeight: "300",
-    color: Colors.dark.sage,
-    letterSpacing: 0.5,
-    textAlign: "center",
-    lineHeight: 20,
-  },
-  summaryCard: {
-    backgroundColor: Colors.dark.cardGlass,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.dark.primary,
-    padding: Spacing.lg,
-  },
-  summaryRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  summaryLabel: {
-    fontSize: 10,
-    fontWeight: "300",
-    color: Colors.dark.sage,
-    letterSpacing: 1.5,
-  },
-  summaryValue: {
     fontSize: 18,
     fontWeight: "400",
-    color: Colors.dark.cream,
+    color: Colors.dark.text,
     letterSpacing: 0.5,
   },
-  summaryDivider: {
-    height: 1,
-    backgroundColor: Colors.dark.cardBorderGlass,
-    marginVertical: Spacing.md,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: Spacing.md,
-  },
-  sectionLabel: {
-    fontSize: 12,
+  subtitle: {
+    fontSize: 11,
     fontWeight: "300",
-    color: Colors.dark.sage,
-    letterSpacing: 2,
+    color: Colors.dark.textSecondary,
+    marginTop: 2,
   },
-  analyzeAllText: {
-    fontSize: 12,
-    fontWeight: "400",
-    color: Colors.dark.primary,
-    letterSpacing: 0.5,
-  },
-  textDisabled: {
-    opacity: 0.5,
-  },
-  assetsList: {
-    gap: Spacing.md,
-  },
-  assetItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.md,
-    backgroundColor: Colors.dark.cardGlass,
-    borderRadius: BorderRadius.sm,
-    borderWidth: 1,
-    borderColor: Colors.dark.cardBorderGlass,
-    padding: Spacing.md,
-  },
-  assetItemAnalyzed: {
-    borderColor: "rgba(16, 185, 129, 0.3)",
-    backgroundColor: "rgba(16, 185, 129, 0.05)",
-  },
-  assetItemAnalyzing: {
-    borderColor: Colors.dark.primary,
-    backgroundColor: "rgba(201, 169, 97, 0.05)",
-  },
-  assetIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: Colors.dark.backgroundSecondary,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  assetIconAnalyzed: {
-    backgroundColor: "rgba(16, 185, 129, 0.15)",
-  },
-  assetInfo: {
+  headerRight: {
     flex: 1,
-  },
-  assetName: {
-    fontSize: 14,
-    fontWeight: "400",
-    color: Colors.dark.cream,
-    letterSpacing: 0.3,
-    marginBottom: 2,
-  },
-  assetMeta: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.xs,
-  },
-  assetType: {
-    fontSize: 11,
-    fontWeight: "300",
-    color: Colors.dark.sage,
-  },
-  assetDot: {
-    fontSize: 11,
-    color: Colors.dark.sage,
-  },
-  assetValue: {
-    fontSize: 11,
-    fontWeight: "400",
-    color: Colors.dark.primary,
-  },
-  assetStatus: {
-    minWidth: 80,
     alignItems: "flex-end",
   },
-  analyzingBadge: {
-    padding: Spacing.xs,
+  navigationContainer: {
+    paddingHorizontal: Spacing.lg,
+    marginBottom: Spacing["2xl"],
   },
-  tapToAnalyze: {
-    fontSize: 10,
-    fontWeight: "300",
-    color: Colors.dark.textTertiary,
-    letterSpacing: 0.3,
-  },
-  infoCard: {
+  navigationPills: {
     flexDirection: "row",
-    alignItems: "flex-start",
-    gap: Spacing.md,
-    backgroundColor: "rgba(201, 169, 97, 0.05)",
-    borderRadius: BorderRadius.sm,
-    padding: Spacing.md,
-    borderWidth: 1,
-    borderColor: "rgba(201, 169, 97, 0.2)",
-  },
-  infoText: {
-    flex: 1,
-    fontSize: 12,
-    fontWeight: "300",
-    color: Colors.dark.sage,
-    lineHeight: 18,
-  },
-  spacer: {
-    flex: 1,
-    minHeight: Spacing.xl,
-  },
-  successBanner: {
-    flexDirection: "row",
-    alignItems: "center",
     justifyContent: "center",
     gap: Spacing.sm,
-    backgroundColor: "rgba(16, 185, 129, 0.1)",
-    paddingVertical: Spacing.lg,
-    paddingHorizontal: Spacing.xl,
-    borderRadius: BorderRadius.full,
+    marginBottom: Spacing.sm,
   },
-  successText: {
-    fontSize: 14,
-    fontWeight: "400",
-    color: Colors.dark.successBright,
-    letterSpacing: 0.3,
-  },
-  continueButtonContainer: {
-    width: "100%",
-  },
-  continueButtonDisabled: {
-    opacity: 0.6,
-  },
-  continueButton: {
-    borderRadius: BorderRadius.full,
-    paddingVertical: Spacing.lg,
-    paddingHorizontal: Spacing.xl,
-    alignItems: "center",
+  navigationPillsCenter: {
+    flexDirection: "row",
     justifyContent: "center",
   },
-  continueButtonText: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#1a1a1a",
+  navPill: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.full,
+    backgroundColor: "transparent",
+    borderWidth: 1,
+    borderColor: "rgba(168, 196, 181, 0.3)",
+  },
+  navPillText: {
+    fontSize: 11,
+    fontWeight: "300",
+    color: Colors.dark.text,
+    letterSpacing: 0.3,
+  },
+  assetsContainer: {
+    paddingHorizontal: Spacing.lg,
+    gap: Spacing.xl,
+    marginBottom: Spacing["3xl"],
+  },
+  assetRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
+  },
+  amountCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    overflow: "hidden",
+    shadowColor: "#4ade80",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 15,
+    elevation: 8,
+  },
+  circleGradient: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "rgba(255, 255, 255, 0.2)",
+    borderRadius: 28,
+  },
+  amountText: {
+    fontSize: 11,
+    fontWeight: "300",
+    color: Colors.dark.text,
+    letterSpacing: 0.2,
+  },
+  progressBarContainer: {
+    flex: 1,
+    height: 6,
+    justifyContent: "center",
+  },
+  progressBarTrack: {
+    height: 6,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    borderRadius: 3,
+    overflow: "hidden",
+  },
+  progressBarFill: {
+    height: "100%",
+    borderRadius: 3,
+    overflow: "hidden",
+  },
+  progressGradient: {
+    flex: 1,
+    shadowColor: "#4ade80",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 4,
+  },
+  assetNamePill: {
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.full,
+    backgroundColor: "rgba(20, 54, 30, 0.8)",
+    borderWidth: 1,
+    borderColor: "rgba(168, 196, 181, 0.3)",
+  },
+  assetNameText: {
+    fontSize: 12,
+    fontWeight: "300",
+    color: Colors.dark.text,
+    letterSpacing: 0.3,
+  },
+  bottomSection: {
+    flexDirection: "row",
+    paddingHorizontal: Spacing.lg,
+    alignItems: "flex-start",
+    marginTop: Spacing.xl,
+  },
+  transformButtonContainer: {
+    flex: 1,
+    alignItems: "flex-start",
+    justifyContent: "center",
+    paddingTop: 40,
+  },
+  transformButtonWrapper: {
+    overflow: "hidden",
+    borderRadius: BorderRadius.full,
+  },
+  transformButton: {
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.full,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.2)",
+  },
+  transformButtonText: {
+    fontSize: 11,
+    fontWeight: "300",
+    color: Colors.dark.text,
     letterSpacing: 0.5,
   },
-  continueButtonTextDisabled: {
-    color: "#999",
+  cylindersContainer: {
+    alignItems: "flex-end",
+    paddingRight: Spacing.lg,
+  },
+  cylinderSpacer: {
+    height: Spacing.md,
+  },
+  cylinder: {
+    width: 48,
+    height: 64,
+    borderRadius: 24,
+    overflow: "hidden",
+    shadowColor: "#6b7280",
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.8,
+    shadowRadius: 15,
+    elevation: 12,
+  },
+  cylinderBody: {
+    flex: 1,
+    borderRadius: 24,
+    position: "relative",
+    overflow: "hidden",
+  },
+  cylinderTopHighlight: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: "30%",
+    backgroundColor: "rgba(255, 255, 255, 0.25)",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+  },
+  cylinderBottomShadow: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: "30%",
+    backgroundColor: "rgba(0, 0, 0, 0.2)",
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
   },
 });
