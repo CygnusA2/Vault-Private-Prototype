@@ -1,7 +1,7 @@
 # Vault Private - UHNW Private Banking App
 
 ## Overview
-A proof-of-concept mobile app prototype for a proprietary authenticator and private banking experience designed for ultra-high net worth clients. This prototype demonstrates the envisioned user flow for investor and client presentations.
+A proof-of-concept mobile app prototype for a proprietary authenticator and private banking experience designed for ultra-high net worth clients. This prototype demonstrates the complete transaction flow for investor and client presentations.
 
 **Status**: Frontend prototype (demo mode - no real backend or data persistence)
 
@@ -10,16 +10,14 @@ A proof-of-concept mobile app prototype for a proprietary authenticator and priv
 - Custom gold/dark luxury theme implemented
 - Complete authentication flow with SMS verification simulation
 - KYC onboarding with 5-step progressive disclosure
-- Biometric enrollment simulation (fingerprint, iris)
+- Biometric enrollment simulation (fingerprint, iris with scanning animation)
 - Face recognition login simulation with 2FA auto-fill
 - Dashboard with mock account data
-- **Pre-Approve screen added** - Now appears immediately after sign-in (both new users and returning users) before Dashboard
-- Theme extended with cream (#E8D5B7) and sage (#A8C4B5) accent colors for Pre-Approve
-- **Auth flow streamlined** - Phone entry and SMS verification consolidated into Welcome screen
-- **Document screen updated** - Now requires 3 documents: Passport, National ID, Proof of Address (no older than 1 month)
-- **Face scan animation added** - Up/down scanning line with progress percentage
-- **Dow Jones Risk & Compliance** - New security layer added to Biometric Setup screen
-- **California address** - Default address updated to Menlo Park, CA
+- **Pre-Approve screen** - Auto-checks Government ID and Proof of Address (verified from KYC)
+- **Iris Recognition** - Now includes eye scanning animation with up/down scan line
+- **Illiquid Assets screen** - AI Agent asset analysis with portfolio verification
+- **LedgerToken screen** - Asset-to-token conversion with progress animation
+- **Optimus screen** - Token-to-cash liquidity conversion
 
 ## Project Architecture
 
@@ -36,18 +34,21 @@ A proof-of-concept mobile app prototype for a proprietary authenticator and priv
 ├── context/
 │   └── AuthContext.tsx        # Authentication state management
 ├── navigation/
-│   ├── RootNavigator.tsx      # Auth/Main switch
+│   ├── RootNavigator.tsx      # Auth/Transaction flow switch
 │   ├── AuthStackNavigator.tsx # Onboarding flow
 │   ├── MainTabNavigator.tsx   # 4-tab navigation
 │   └── HomeStackNavigator.tsx # Home tab stack
 ├── screens/
-│   ├── WelcomeScreen.tsx      # Phone entry + SMS verification combined
+│   ├── WelcomeScreen.tsx      # Phone entry + SMS verification
 │   ├── KYCNameScreen.tsx      # Personal details (Step 1)
 │   ├── KYCDocumentScreen.tsx  # Document upload - 3 required (Step 2)
 │   ├── KYCSelfieScreen.tsx    # Face scan with animation (Step 3)
-│   ├── KYCBiometricScreen.tsx # Biometric + Dow Jones (Step 4)
+│   ├── KYCBiometricScreen.tsx # Biometric + Iris scan + Dow Jones (Step 4)
 │   ├── KYCAddressScreen.tsx   # California address (Step 5)
-│   ├── PreApproveScreen.tsx   # Pre-approval document upload
+│   ├── PreApproveScreen.tsx   # Pre-approval with auto-checked docs
+│   ├── IlliquidAssetsScreen.tsx # Asset portfolio analysis
+│   ├── LedgerTokenScreen.tsx  # Tokenization process
+│   ├── OptimusScreen.tsx      # Cash conversion
 │   ├── FaceRecognitionScreen.tsx # Face scan login
 │   ├── TwoFactorScreen.tsx    # 2FA auto-fill
 │   ├── DashboardScreen.tsx    # Main home
@@ -72,40 +73,53 @@ A proof-of-concept mobile app prototype for a proprietary authenticator and priv
 - Animation-rich experience for premium feel
 - No emojis in the application
 
-## Key Features Demonstrated
+## Complete Transaction Flow
 
 ### New User Onboarding
-1. **Welcome screen** - Phone entry with country code picker, auto-sends SMS code
-2. **SMS verification** - 6-digit code entry on same screen (demo: use 123456)
+1. **Welcome screen** - Phone entry, auto-sends SMS code
+2. **SMS verification** - 6-digit code (demo: 123456)
 3. **Personal Details** - First name, last name, email (Step 1)
-4. **Identity Documents** - Upload 3 required docs: Passport, National ID, Proof of Address (Step 2)
-5. **Photo Verification** - Face scan with animated up/down scanning line (Step 3)
-6. **Biometric Setup** - Fingerprint, Iris Recognition, Dow Jones Risk & Compliance check (Step 4)
-7. **Address Details** - California address auto-fill: 2800 Sand Hill Road, Menlo Park (Step 5)
-8. **Pre-Approve screen** - Document upload simulation
-9. Continue to Dashboard
+4. **Identity Documents** - 3 required docs (Step 2)
+5. **Photo Verification** - Face scan with animation (Step 3)
+6. **Biometric Setup** - Fingerprint, Iris scan, Dow Jones check (Step 4)
+7. **Address Details** - California address auto-fill (Step 5)
 
-### Returning User Login
-1. Face recognition simulation
-2. Automatic 2FA code delivery and auto-fill
-3. **Pre-Approve screen** (same as new users)
-4. Seamless transition to dashboard
+### Transaction Processing
+8. **Pre-Approve** - Government ID & Proof of Address auto-checked
+   - Only requires: Proof of Ownership + Asset Documentation
+   - Auto-navigates when complete
+9. **Illiquid Assets** - AI Agent analyzes asset portfolio
+   - Shows: Real Estate, Art, Private Equity, Wine
+   - "Analyze All" or tap individual assets
+   - Auto-navigates when all analyzed
+10. **LedgerToken** - Converts assets to tokens
+    - Shows conversion rate: 1 LT = $1,000
+    - "Start Tokenization" with progress animation
+    - Auto-navigates when complete
+11. **Optimus** - Converts tokens to cash
+    - Final liquidity conversion
+    - "Convert to Cash" with progress
+    - Auto-navigates to Dashboard
 
-### Main App
-- **Home Tab**: Welcome card, balance, quick actions, transactions
-- **Accounts Tab**: List of accounts with balances
-- **Settings Tab**: Security, profile, preferences
-- **Profile Tab**: User info, verification badges
+### Dashboard
+- Welcome card, balance display, quick actions, transactions
+- Account management, settings, profile
 
-## KYC Document Requirements
-1. **Passport** - Valid government-issued passport
-2. **National ID Card** - Front and back of national ID
-3. **Proof of Address** - Utility bill or bank statement, no older than 1 month
+## Biometric Features
+- **Fingerprint** - Toggle enrollment simulation
+- **Iris Recognition** - Eye scanning animation with:
+  - Eyeball graphic with pupil
+  - Scan line moving up/down
+  - Progress percentage display
+  - Success confirmation
+- **Dow Jones Risk & Compliance** - Sanctions/watchlist check simulation
 
-## Security Features
-- **Fingerprint** - Biometric enrollment simulation
-- **Iris Recognition** - Enhanced security biometric
-- **Dow Jones Risk & Compliance** - Deep due diligence against global sanctions and watchlists
+## Asset Categories
+1. **Real Estate Portfolio** - $4,250,000
+2. **Art Collection** - $1,850,000
+3. **Private Equity Holdings** - $2,500,000
+4. **Wine Collection** - $320,000
+- Total Portfolio: $8,920,000
 
 ## Future Development (Production Phase)
 - Real SMS gateway integration (Twilio)

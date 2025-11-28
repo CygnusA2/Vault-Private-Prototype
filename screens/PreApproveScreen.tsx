@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, StyleSheet, Pressable, Modal, Platform } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -19,15 +19,15 @@ import { useAuth } from "@/context/AuthContext";
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 const REQUIRED_DOCS = [
-  { id: "id", label: "Government-issued ID", critical: true, points: 15 },
-  { id: "ownership", label: "Proof of Ownership", critical: true, points: 20 },
-  { id: "address", label: "Proof of Address", critical: true, points: 10 },
-  { id: "asset", label: "Asset Documentation", critical: true, points: 15 },
+  { id: "id", label: "Government-issued ID", critical: true, points: 15, preVerified: true },
+  { id: "address", label: "Proof of Address", critical: true, points: 10, preVerified: true },
+  { id: "ownership", label: "Proof of Ownership", critical: true, points: 20, preVerified: false },
+  { id: "asset", label: "Asset Documentation", critical: true, points: 15, preVerified: false },
 ];
 
 export default function PreApproveScreen() {
-  const { completePreApprove } = useAuth();
-  const [uploadedDocs, setUploadedDocs] = useState<string[]>([]);
+  const { setNeedsPreApprove, setNeedsIlliquidAssets } = useAuth();
+  const [uploadedDocs, setUploadedDocs] = useState<string[]>(["id", "address"]);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
@@ -36,15 +36,32 @@ export default function PreApproveScreen() {
     uploadedDocs.includes(doc.id)
   ).reduce((sum, doc) => sum + doc.points, 0);
   const approvalLikelihood = Math.min(baseApproval + uploadedPoints, 100);
+  
+  const preVerifiedCount = REQUIRED_DOCS.filter(doc => doc.preVerified).length;
+  const remainingDocs = REQUIRED_DOCS.filter(doc => !doc.preVerified);
+  const allRemainingUploaded = remainingDocs.every(doc => uploadedDocs.includes(doc.id));
   const completeness = (uploadedDocs.length / REQUIRED_DOCS.length) * 100;
+
+  useEffect(() => {
+    if (allRemainingUploaded) {
+      const timer = setTimeout(() => {
+        setNeedsPreApprove(false);
+        setNeedsIlliquidAssets(true);
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [allRemainingUploaded]);
 
   const getApprovalLabel = (likelihood: number) => {
     if (likelihood >= 80) return "High";
-    if (likelihood >= 60) return "Medium";
-    return "Low";
+    if (likelihood >= 60) return "Medium-High";
+    return "Medium";
   };
 
   const toggleDoc = (docId: string) => {
+    const doc = REQUIRED_DOCS.find(d => d.id === docId);
+    if (doc?.preVerified) return;
+    
     if (Platform.OS === "ios" || Platform.OS === "android") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
@@ -89,6 +106,11 @@ export default function PreApproveScreen() {
     }, 1500);
   };
 
+  const handleContinue = () => {
+    setNeedsPreApprove(false);
+    setNeedsIlliquidAssets(true);
+  };
+
   return (
     <AuthScreenScrollView contentContainerStyle={styles.scrollContent}>
       <Animated.View
@@ -97,12 +119,19 @@ export default function PreApproveScreen() {
       >
         <ThemedText style={styles.mainTitle}>Pre-Approval in progress</ThemedText>
         <ThemedText style={styles.subtitle}>
-          Upload your documents to unlock 15-minute funding.
+          Upload remaining documents to unlock 15-minute funding.
         </ThemedText>
         <View style={styles.timeEstimate}>
           <Feather name="clock" size={12} color={Colors.dark.sage} />
           <ThemedText style={styles.timeText}>
-            Estimated time to pre-approval: 2-3 minutes
+            Estimated time to pre-approval: 1-2 minutes
+          </ThemedText>
+        </View>
+
+        <View style={styles.verifiedBadge}>
+          <Feather name="check-circle" size={14} color={Colors.dark.successBright} />
+          <ThemedText style={styles.verifiedText}>
+            {preVerifiedCount} documents already verified from KYC
           </ThemedText>
         </View>
 
@@ -114,10 +143,7 @@ export default function PreApproveScreen() {
             {"\u2022"} Illiquid asset documents must be issued within last 3 months
           </ThemedText>
           <ThemedText style={styles.requirementItem}>
-            {"\u2022"} Passport/DNI must be valid and not expired
-          </ThemedText>
-          <ThemedText style={styles.requirementItem}>
-            {"\u2022"} Proof of address must be issued within last 1 month
+            {"\u2022"} Only upload Proof of Ownership and Asset Documentation
           </ThemedText>
         </View>
       </Animated.View>
@@ -143,6 +169,7 @@ export default function PreApproveScreen() {
               key={doc.id}
               doc={doc}
               isUploaded={uploadedDocs.includes(doc.id)}
+              isPreVerified={doc.preVerified}
               onToggle={() => toggleDoc(doc.id)}
             />
           ))}
@@ -172,18 +199,29 @@ export default function PreApproveScreen() {
 
         <View style={styles.approvalCard}>
           <ThemedText style={styles.approvalLabel}>APPROVAL LIKELIHOOD</ThemedText>
-          <ThemedText style={styles.approvalPercent}>{approvalLikelihood}%</ThemedText>
+          <ThemedText style={[styles.approvalPercent, approvalLikelihood >= 65 && styles.approvalPercentHigh]}>
+            {approvalLikelihood}%
+          </ThemedText>
           <ThemedText style={styles.approvalLevel}>
             {getApprovalLabel(approvalLikelihood)}
           </ThemedText>
-          {uploadedDocs.length < REQUIRED_DOCS.length ? (
+          {!allRemainingUploaded ? (
             <ThemedText style={styles.approvalHint}>
-              Upload all required documents to maximize approval chances
+              Upload remaining documents to proceed automatically
             </ThemedText>
-          ) : null}
+          ) : (
+            <View style={styles.autoProgressBadge}>
+              <Feather name="loader" size={14} color={Colors.dark.successBright} />
+              <ThemedText style={styles.autoProgressText}>
+                All documents verified - Proceeding...
+              </ThemedText>
+            </View>
+          )}
         </View>
 
-        <ContinueButton onPress={completePreApprove} />
+        {!allRemainingUploaded ? (
+          <ContinueButton onPress={handleContinue} disabled={!allRemainingUploaded} />
+        ) : null}
       </Animated.View>
 
       <Modal
@@ -209,7 +247,7 @@ export default function PreApproveScreen() {
                 <ThemedText style={styles.modalSubtitle}>
                   Demo: Select which document to mark as uploaded
                 </ThemedText>
-                {REQUIRED_DOCS.filter((doc) => !uploadedDocs.includes(doc.id)).map(
+                {remainingDocs.filter((doc) => !uploadedDocs.includes(doc.id)).map(
                   (doc) => (
                     <Pressable
                       key={doc.id}
@@ -221,7 +259,7 @@ export default function PreApproveScreen() {
                     </Pressable>
                   )
                 )}
-                {uploadedDocs.length === REQUIRED_DOCS.length ? (
+                {allRemainingUploaded ? (
                   <ThemedText style={styles.allUploadedText}>
                     All documents have been uploaded!
                   </ThemedText>
@@ -271,7 +309,7 @@ function UploadButton({ onPress }: { onPress: () => void }) {
   );
 }
 
-function ContinueButton({ onPress }: { onPress: () => void }) {
+function ContinueButton({ onPress, disabled }: { onPress: () => void; disabled?: boolean }) {
   const scale = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -281,22 +319,25 @@ function ContinueButton({ onPress }: { onPress: () => void }) {
   return (
     <AnimatedPressable
       onPressIn={() => {
-        scale.value = withSpring(0.97);
+        if (!disabled) scale.value = withSpring(0.97);
       }}
       onPressOut={() => {
         scale.value = withSpring(1);
       }}
-      onPress={onPress}
-      style={[styles.continueButtonContainer, animatedStyle]}
+      onPress={disabled ? undefined : onPress}
+      disabled={disabled}
+      style={[styles.continueButtonContainer, animatedStyle, disabled && styles.continueButtonDisabled]}
     >
       <LinearGradient
-        colors={[Colors.dark.primary, "#D4B872", "#E5C88A"]}
+        colors={disabled ? ["#666", "#555", "#444"] : [Colors.dark.primary, "#D4B872", "#E5C88A"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={styles.continueButton}
       >
-        <ThemedText style={styles.continueButtonText}>Continue to Dashboard</ThemedText>
-        <Feather name="arrow-right" size={18} color="#1a1a1a" />
+        <ThemedText style={[styles.continueButtonText, disabled && styles.continueButtonTextDisabled]}>
+          Continue
+        </ThemedText>
+        <Feather name="arrow-right" size={18} color={disabled ? "#999" : "#1a1a1a"} />
       </LinearGradient>
     </AnimatedPressable>
   );
@@ -305,10 +346,12 @@ function ContinueButton({ onPress }: { onPress: () => void }) {
 function DocumentItem({
   doc,
   isUploaded,
+  isPreVerified,
   onToggle,
 }: {
   doc: { id: string; label: string; critical: boolean; points: number };
   isUploaded: boolean;
+  isPreVerified?: boolean;
   onToggle: () => void;
 }) {
   const scale = useSharedValue(1);
@@ -320,27 +363,35 @@ function DocumentItem({
   return (
     <AnimatedPressable
       onPressIn={() => {
-        scale.value = withSpring(0.98);
+        if (!isPreVerified) scale.value = withSpring(0.98);
       }}
       onPressOut={() => {
         scale.value = withSpring(1);
       }}
-      onPress={onToggle}
-      style={[styles.docItem, animatedStyle]}
+      onPress={isPreVerified ? undefined : onToggle}
+      disabled={isPreVerified}
+      style={[styles.docItem, animatedStyle, isPreVerified && styles.docItemPreVerified]}
     >
       <View
         style={[
           styles.checkbox,
           isUploaded && styles.checkboxChecked,
+          isPreVerified && styles.checkboxPreVerified,
         ]}
       >
         {isUploaded ? (
-          <Feather name="check" size={12} color="#1a1a1a" />
+          <Feather name="check" size={12} color={isPreVerified ? Colors.dark.successBright : "#1a1a1a"} />
         ) : null}
       </View>
       <View style={styles.docInfo}>
-        <ThemedText style={styles.docLabel}>{doc.label}</ThemedText>
-        {doc.critical ? (
+        <ThemedText style={[styles.docLabel, isPreVerified && styles.docLabelPreVerified]}>
+          {doc.label}
+        </ThemedText>
+        {isPreVerified ? (
+          <ThemedText style={styles.docMetaVerified}>
+            Verified from KYC
+          </ThemedText>
+        ) : doc.critical ? (
           <ThemedText style={styles.docMeta}>
             Required {"\u2022"} +{doc.points}% approval
           </ThemedText>
@@ -378,13 +429,29 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: Spacing.sm,
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.md,
   },
   timeText: {
     fontSize: 11,
     fontWeight: "300",
     color: Colors.dark.sage,
     letterSpacing: 0.5,
+  },
+  verifiedBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+    backgroundColor: "rgba(16, 185, 129, 0.1)",
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    borderRadius: BorderRadius.full,
+    marginBottom: Spacing.lg,
+  },
+  verifiedText: {
+    fontSize: 12,
+    fontWeight: "400",
+    color: Colors.dark.successBright,
+    letterSpacing: 0.3,
   },
   requirements: {
     alignSelf: "stretch",
@@ -424,6 +491,9 @@ const styles = StyleSheet.create({
     width: "100%",
     marginTop: Spacing.md,
   },
+  continueButtonDisabled: {
+    opacity: 0.6,
+  },
   continueButton: {
     borderRadius: BorderRadius.full,
     paddingVertical: Spacing.lg,
@@ -438,6 +508,9 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#1a1a1a",
     letterSpacing: 0.5,
+  },
+  continueButtonTextDisabled: {
+    color: "#999",
   },
   sectionLabel: {
     fontSize: 12,
@@ -459,6 +532,10 @@ const styles = StyleSheet.create({
     borderColor: Colors.dark.cardBorderGlass,
     padding: Spacing.md,
   },
+  docItemPreVerified: {
+    backgroundColor: "rgba(16, 185, 129, 0.05)",
+    borderColor: "rgba(16, 185, 129, 0.2)",
+  },
   checkbox: {
     width: 20,
     height: 20,
@@ -472,6 +549,10 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.dark.successBright,
     borderColor: Colors.dark.successBright,
   },
+  checkboxPreVerified: {
+    backgroundColor: "transparent",
+    borderColor: Colors.dark.successBright,
+  },
   docInfo: {
     flex: 1,
   },
@@ -481,10 +562,20 @@ const styles = StyleSheet.create({
     color: Colors.dark.cream,
     letterSpacing: 0.3,
   },
+  docLabelPreVerified: {
+    color: Colors.dark.successBright,
+  },
   docMeta: {
     fontSize: 10,
     fontWeight: "300",
     color: Colors.dark.sage,
+    letterSpacing: 0.3,
+    marginTop: 2,
+  },
+  docMetaVerified: {
+    fontSize: 10,
+    fontWeight: "300",
+    color: Colors.dark.successBright,
     letterSpacing: 0.3,
     marginTop: 2,
   },
@@ -539,8 +630,11 @@ const styles = StyleSheet.create({
   approvalPercent: {
     fontSize: 32,
     fontWeight: "300",
-    color: Colors.dark.successBright,
+    color: Colors.dark.primary,
     letterSpacing: 0.5,
+  },
+  approvalPercentHigh: {
+    color: Colors.dark.successBright,
   },
   approvalLevel: {
     fontSize: 14,
@@ -556,6 +650,22 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
     textAlign: "center",
     marginTop: Spacing.sm,
+  },
+  autoProgressBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+    marginTop: Spacing.md,
+    backgroundColor: "rgba(16, 185, 129, 0.1)",
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    borderRadius: BorderRadius.full,
+  },
+  autoProgressText: {
+    fontSize: 12,
+    fontWeight: "400",
+    color: Colors.dark.successBright,
+    letterSpacing: 0.3,
   },
   modalOverlay: {
     flex: 1,

@@ -8,8 +8,11 @@ import Animated, {
   withSpring,
   withRepeat,
   withTiming,
+  withSequence,
+  Easing,
   FadeInDown,
   FadeIn,
+  cancelAnimation,
 } from "react-native-reanimated";
 import { AuthScreenScrollView } from "@/components/AuthScreenScrollView";
 import { ThemedText } from "@/components/ThemedText";
@@ -23,6 +26,9 @@ type KYCBiometricScreenProps = {
 };
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+const IRIS_SCAN_DURATION = 800;
+const IRIS_HEIGHT = 120;
+const SCAN_LINE_HEIGHT = 3;
 
 export default function KYCBiometricScreen({ navigation }: KYCBiometricScreenProps) {
   const { setUserData } = useAuth();
@@ -31,10 +37,15 @@ export default function KYCBiometricScreen({ navigation }: KYCBiometricScreenPro
   const [dowJonesEnabled, setDowJonesEnabled] = useState(false);
   const [fingerprintEnrolled, setFingerprintEnrolled] = useState(false);
   const [irisEnrolled, setIrisEnrolled] = useState(false);
+  const [irisScanning, setIrisScanning] = useState(false);
+  const [irisScanProgress, setIrisScanProgress] = useState(0);
   const [dowJonesChecked, setDowJonesChecked] = useState(false);
   const [dowJonesChecking, setDowJonesChecking] = useState(false);
   const buttonScale = useSharedValue(1);
   const pulseAnim = useSharedValue(1);
+  const irisScanLinePosition = useSharedValue(0);
+  const irisScanLineOpacity = useSharedValue(0);
+  const irisFrameGlow = useSharedValue(0);
 
   useEffect(() => {
     if (dowJonesChecking) {
@@ -48,12 +59,74 @@ export default function KYCBiometricScreen({ navigation }: KYCBiometricScreenPro
     }
   }, [dowJonesChecking]);
 
+  useEffect(() => {
+    if (irisScanning) {
+      irisScanLineOpacity.value = 1;
+      irisScanLinePosition.value = 0;
+
+      irisScanLinePosition.value = withRepeat(
+        withSequence(
+          withTiming(IRIS_HEIGHT - SCAN_LINE_HEIGHT, {
+            duration: IRIS_SCAN_DURATION,
+            easing: Easing.inOut(Easing.ease),
+          }),
+          withTiming(0, {
+            duration: IRIS_SCAN_DURATION,
+            easing: Easing.inOut(Easing.ease),
+          })
+        ),
+        -1,
+        false
+      );
+
+      irisFrameGlow.value = withRepeat(
+        withSequence(
+          withTiming(1, { duration: 600 }),
+          withTiming(0.4, { duration: 600 })
+        ),
+        -1,
+        false
+      );
+
+      let progress = 0;
+      const progressInterval = setInterval(() => {
+        progress += 4;
+        setIrisScanProgress(Math.min(progress, 100));
+        if (progress >= 100) {
+          clearInterval(progressInterval);
+        }
+      }, 60);
+
+      const timer = setTimeout(() => {
+        cancelAnimation(irisScanLinePosition);
+        cancelAnimation(irisFrameGlow);
+        irisScanLineOpacity.value = withTiming(0, { duration: 300 });
+        setIrisScanning(false);
+        setIrisEnrolled(true);
+      }, 2500);
+
+      return () => {
+        clearTimeout(timer);
+        clearInterval(progressInterval);
+      };
+    }
+  }, [irisScanning]);
+
   const buttonAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: buttonScale.value }],
   }));
 
   const pulseStyle = useAnimatedStyle(() => ({
     transform: [{ scale: pulseAnim.value }],
+  }));
+
+  const irisScanLineAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: irisScanLinePosition.value }],
+    opacity: irisScanLineOpacity.value,
+  }));
+
+  const irisFrameGlowStyle = useAnimatedStyle(() => ({
+    shadowOpacity: irisFrameGlow.value * 0.8,
   }));
 
   const handleFingerprintToggle = (value: boolean) => {
@@ -67,10 +140,13 @@ export default function KYCBiometricScreen({ navigation }: KYCBiometricScreenPro
 
   const handleIrisToggle = (value: boolean) => {
     setIrisEnabled(value);
-    if (value) {
-      setTimeout(() => setIrisEnrolled(true), 1000);
-    } else {
+    if (value && !irisEnrolled) {
+      setIrisScanProgress(0);
+      setIrisScanning(true);
+    } else if (!value) {
       setIrisEnrolled(false);
+      setIrisScanning(false);
+      setIrisScanProgress(0);
     }
   };
 
@@ -199,12 +275,15 @@ export default function KYCBiometricScreen({ navigation }: KYCBiometricScreenPro
               >
                 {irisEnrolled
                   ? "Enrolled successfully"
+                  : irisScanning
+                  ? "Scanning iris..."
                   : "Use iris scan for enhanced security"}
               </ThemedText>
             </View>
             <Switch
               value={irisEnabled}
               onValueChange={handleIrisToggle}
+              disabled={irisScanning}
               trackColor={{
                 false: Colors.dark.backgroundTertiary,
                 true: Colors.dark.primary,
@@ -212,18 +291,45 @@ export default function KYCBiometricScreen({ navigation }: KYCBiometricScreenPro
               thumbColor={Colors.dark.text}
             />
           </View>
-          {irisEnabled && !irisEnrolled ? (
-            <View style={styles.enrollingContainer}>
-              <Feather
-                name="loader"
-                size={20}
-                color={Colors.dark.primary}
-              />
-              <ThemedText
-                type="small"
-                style={{ color: Colors.dark.primary }}
+          
+          {irisScanning ? (
+            <View style={styles.irisScanContainer}>
+              <Animated.View
+                style={[
+                  styles.eyeFrame,
+                  styles.eyeFrameScanning,
+                  irisFrameGlowStyle,
+                ]}
               >
-                Enrolling iris...
+                <View style={styles.eyeScanningContainer}>
+                  <View style={styles.eyeballOuter}>
+                    <View style={styles.eyeballInner}>
+                      <View style={styles.pupil} />
+                    </View>
+                  </View>
+                  
+                  <Animated.View style={[styles.irisScanLine, irisScanLineAnimatedStyle]}>
+                    <View style={styles.scanLineGlow} />
+                    <View style={styles.scanLineCore} />
+                    <View style={styles.scanLineGlow} />
+                  </Animated.View>
+                </View>
+              </Animated.View>
+              
+              <View style={styles.scanProgressContainer}>
+                <View style={styles.progressBarContainer}>
+                  <View style={[styles.progressBarFill, { width: `${irisScanProgress}%` }]} />
+                </View>
+                <ThemedText type="small" style={{ color: Colors.dark.primary }}>
+                  Scanning iris... {irisScanProgress}%
+                </ThemedText>
+              </View>
+            </View>
+          ) : irisEnrolled ? (
+            <View style={styles.enrolledSuccessContainer}>
+              <Feather name="check-circle" size={18} color={Colors.dark.success} />
+              <ThemedText type="small" style={{ color: Colors.dark.success }}>
+                Iris pattern captured and encrypted
               </ThemedText>
             </View>
           ) : null}
@@ -400,6 +506,107 @@ const styles = StyleSheet.create({
     color: Colors.dark.text,
   },
   enrollingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+    marginTop: Spacing.lg,
+    paddingTop: Spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: Colors.dark.border,
+  },
+  irisScanContainer: {
+    marginTop: Spacing.lg,
+    paddingTop: Spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: Colors.dark.border,
+    alignItems: "center",
+    gap: Spacing.lg,
+  },
+  eyeFrame: {
+    width: 160,
+    height: IRIS_HEIGHT,
+    borderRadius: 60,
+    borderWidth: 2,
+    borderColor: Colors.dark.border,
+    justifyContent: "center",
+    alignItems: "center",
+    overflow: "hidden",
+    position: "relative",
+  },
+  eyeFrameScanning: {
+    borderColor: Colors.dark.primary,
+    shadowColor: Colors.dark.primary,
+    shadowOffset: { width: 0, height: 0 },
+    shadowRadius: 15,
+    elevation: 8,
+  },
+  eyeScanningContainer: {
+    width: "100%",
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+    position: "relative",
+  },
+  eyeballOuter: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: Colors.dark.backgroundSecondary,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: Colors.dark.textTertiary,
+  },
+  eyeballInner: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#5B3A1D",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  pupil: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: "#1a1a1a",
+  },
+  irisScanLine: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    height: SCAN_LINE_HEIGHT,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  scanLineCore: {
+    flex: 1,
+    height: 2,
+    backgroundColor: Colors.dark.primary,
+  },
+  scanLineGlow: {
+    width: 15,
+    height: SCAN_LINE_HEIGHT,
+    backgroundColor: Colors.dark.primary,
+    opacity: 0.3,
+  },
+  scanProgressContainer: {
+    width: "100%",
+    alignItems: "center",
+    gap: Spacing.sm,
+  },
+  progressBarContainer: {
+    width: "100%",
+    height: 4,
+    backgroundColor: Colors.dark.backgroundSecondary,
+    borderRadius: 2,
+    overflow: "hidden",
+  },
+  progressBarFill: {
+    height: "100%",
+    backgroundColor: Colors.dark.primary,
+  },
+  enrolledSuccessContainer: {
     flexDirection: "row",
     alignItems: "center",
     gap: Spacing.sm,

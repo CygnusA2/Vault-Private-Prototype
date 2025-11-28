@@ -24,6 +24,9 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isReturningUser: boolean;
   needsPreApprove: boolean;
+  needsIlliquidAssets: boolean;
+  needsLedgerToken: boolean;
+  needsOptimus: boolean;
   userData: UserData | null;
   login: () => void;
   logout: () => void;
@@ -31,6 +34,11 @@ interface AuthContextType {
   completeOnboarding: () => void;
   simulateReturningUser: () => void;
   completePreApprove: () => void;
+  setNeedsPreApprove: (value: boolean) => void;
+  setNeedsIlliquidAssets: (value: boolean) => void;
+  setNeedsLedgerToken: (value: boolean) => void;
+  setNeedsOptimus: (value: boolean) => void;
+  completeOptimus: () => void;
 }
 
 const defaultUserData: UserData = {
@@ -58,18 +66,24 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isReturningUser, setIsReturningUser] = useState(false);
-  const [needsPreApprove, setNeedsPreApprove] = useState(false);
+  const [needsPreApprove, setNeedsPreApproveState] = useState(false);
+  const [needsIlliquidAssets, setNeedsIlliquidAssetsState] = useState(false);
+  const [needsLedgerToken, setNeedsLedgerTokenState] = useState(false);
+  const [needsOptimus, setNeedsOptimusState] = useState(false);
   const [userData, setUserDataState] = useState<UserData>(defaultUserData);
 
   const login = () => {
     setIsAuthenticated(true);
-    setNeedsPreApprove(true);
+    setNeedsPreApproveState(true);
   };
 
   const logout = () => {
     setIsAuthenticated(false);
     setIsReturningUser(false);
-    setNeedsPreApprove(false);
+    setNeedsPreApproveState(false);
+    setNeedsIlliquidAssetsState(false);
+    setNeedsLedgerTokenState(false);
+    setNeedsOptimusState(false);
     setUserDataState(defaultUserData);
   };
 
@@ -80,11 +94,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const completeOnboarding = () => {
     setIsReturningUser(true);
     setIsAuthenticated(true);
-    setNeedsPreApprove(true);
+    setNeedsPreApproveState(true);
   };
 
   const completePreApprove = () => {
-    setNeedsPreApprove(false);
+    setNeedsPreApproveState(false);
+  };
+
+  const setNeedsPreApprove = (value: boolean) => {
+    setNeedsPreApproveState(value);
+  };
+
+  const setNeedsIlliquidAssets = (value: boolean) => {
+    setNeedsIlliquidAssetsState(value);
+  };
+
+  const setNeedsLedgerToken = (value: boolean) => {
+    setNeedsLedgerTokenState(value);
+  };
+
+  const setNeedsOptimus = (value: boolean) => {
+    setNeedsOptimusState(value);
+  };
+
+  const completeOptimus = () => {
+    setNeedsOptimusState(false);
   };
 
   const simulateReturningUser = () => {
@@ -116,6 +150,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated,
         isReturningUser,
         needsPreApprove,
+        needsIlliquidAssets,
+        needsLedgerToken,
+        needsOptimus,
         userData,
         login,
         logout,
@@ -123,6 +160,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         completeOnboarding,
         simulateReturningUser,
         completePreApprove,
+        setNeedsPreApprove,
+        setNeedsIlliquidAssets,
+        setNeedsLedgerToken,
+        setNeedsOptimus,
+        completeOptimus,
       }}
     >
       {children}
