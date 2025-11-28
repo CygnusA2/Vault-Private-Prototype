@@ -1,15 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { View, StyleSheet, Pressable } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
+import Svg, { Path, Defs, LinearGradient, Stop, Rect, Pattern, Circle } from "react-native-svg";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
-  withRepeat,
-  withSequence,
-  withTiming,
-  Easing,
   FadeInDown,
   FadeIn,
 } from "react-native-reanimated";
@@ -20,254 +16,136 @@ import { useAuth } from "@/context/AuthContext";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
+const NAVIGATION_PILLS = [
+  { id: "full-wallet", label: "Full Wallet" },
+  { id: "optimus", label: "Optimus", active: true },
+  { id: "risk-metrics", label: "Risk Metrics" },
+  { id: "blocks", label: "Blocks" },
+  { id: "card-m", label: "Card M" },
+  { id: "sentinel", label: "Sentinel" },
+];
+
+const ACTION_BUTTONS = [
+  { id: "bank-account", label: "Bank Account" },
+  { id: "transfer-pay", label: "Transfer/Pay" },
+  { id: "debit-credit", label: "Debit/Credit Card" },
+  { id: "invest", label: "Invest" },
+];
+
+const MARKET_DATA = [
+  { id: "stock-price", label: "Nasdaq", change: "+16%", positive: true },
+  { id: "interest-rates", label: "Interest Rates", change: "-20%", positive: false },
+  { id: "exchange-rates", label: "Exchange Rates", change: "-3%", positive: false },
+  { id: "commodities", label: "Commodities", change: "+10%", positive: true },
+];
+
 export default function OptimusScreen() {
-  const { completeOptimus } = useAuth();
-  const [isConverting, setIsConverting] = useState(false);
-  const [conversionProgress, setConversionProgress] = useState(0);
-  const [conversionComplete, setConversionComplete] = useState(false);
-  const rotateAnim = useSharedValue(0);
-  const glowAnim = useSharedValue(0);
+  const { setNeedsOptimus } = useAuth();
 
-  const ledgerTokens = "8,920";
-  const cashAmount = "$8,920,000";
-  const availableCredit = "$8,920,000";
-
-  useEffect(() => {
-    if (isConverting) {
-      rotateAnim.value = withRepeat(
-        withTiming(360, { duration: 1500, easing: Easing.linear }),
-        -1,
-        false
-      );
-      glowAnim.value = withRepeat(
-        withSequence(
-          withTiming(1, { duration: 500 }),
-          withTiming(0.5, { duration: 500 })
-        ),
-        -1,
-        false
-      );
-    }
-  }, [isConverting]);
-
-  useEffect(() => {
-    if (conversionComplete) {
-      const timer = setTimeout(() => {
-        completeOptimus();
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [conversionComplete]);
-
-  const rotateStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${rotateAnim.value}deg` }],
-  }));
-
-  const glowStyle = useAnimatedStyle(() => ({
-    opacity: glowAnim.value,
-  }));
-
-  const handleStartConversion = () => {
-    if (isConverting || conversionComplete) return;
-    
-    setIsConverting(true);
-    setConversionProgress(0);
-
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += 3;
-      setConversionProgress(Math.min(progress, 100));
-      
-      if (progress >= 100) {
-        clearInterval(interval);
-        setTimeout(() => {
-          setIsConverting(false);
-          setConversionComplete(true);
-        }, 500);
-      }
-    }, 50);
+  const handleDashboardNavigation = () => {
+    setNeedsOptimus(false);
   };
 
   return (
     <AuthScreenScrollView contentContainerStyle={styles.scrollContent}>
-      <Animated.View entering={FadeInDown.duration(500).delay(100)} style={styles.header}>
-        <View style={styles.optimusBadge}>
-          {isConverting ? (
-            <Animated.View style={rotateStyle}>
-              <Feather name="loader" size={36} color={Colors.dark.successBright} />
-            </Animated.View>
-          ) : conversionComplete ? (
-            <Feather name="check-circle" size={36} color={Colors.dark.successBright} />
-          ) : (
-            <Feather name="dollar-sign" size={36} color={Colors.dark.successBright} />
-          )}
+      <Animated.View entering={FadeInDown.duration(400)} style={styles.header}>
+        <View style={styles.headerLeft}>
+          <ThemedText style={styles.backText}>Back</ThemedText>
         </View>
-        <ThemedText style={styles.title}>Optimus</ThemedText>
-        <ThemedText style={styles.subtitle}>
-          {conversionComplete 
-            ? "Your funds are now available for immediate access"
-            : "Convert your LedgerTokens to instant cash liquidity"
-          }
-        </ThemedText>
-      </Animated.View>
-
-      <Animated.View entering={FadeInDown.duration(500).delay(200)} style={styles.conversionCard}>
-        <View style={styles.conversionHeader}>
-          <ThemedText style={styles.conversionLabel}>INSTANT LIQUIDITY CONVERSION</ThemedText>
+        <View style={styles.headerCenter}>
+          <ThemedText style={styles.title}>Optimus</ThemedText>
+          <ThemedText style={styles.subtitle}>Powered by Pier</ThemedText>
         </View>
-        
-        <View style={styles.conversionContent}>
-          <View style={styles.conversionSide}>
-            <Feather name="hexagon" size={24} color={Colors.dark.primary} />
-            <ThemedText style={styles.conversionAmount}>{ledgerTokens} LT</ThemedText>
-            <ThemedText style={styles.conversionType}>LedgerTokens</ThemedText>
-          </View>
-          
-          <View style={styles.conversionArrow}>
-            <Feather name="arrow-right" size={20} color={Colors.dark.successBright} />
-          </View>
-          
-          <View style={styles.conversionSide}>
-            <Feather name="dollar-sign" size={24} color={Colors.dark.successBright} />
-            <ThemedText style={[styles.conversionAmount, styles.cashAmount]}>{cashAmount}</ThemedText>
-            <ThemedText style={styles.conversionType}>Available Cash</ThemedText>
-          </View>
+        <View style={styles.headerRight}>
+          <Feather name="user" size={20} color={Colors.dark.text} />
         </View>
       </Animated.View>
 
-      {isConverting ? (
-        <Animated.View entering={FadeIn.duration(400)} style={styles.progressCard}>
-          <ThemedText style={styles.progressTitle}>Converting to Cash</ThemedText>
-          <View style={styles.progressBarContainer}>
-            <LinearGradient
-              colors={["#10B981", "#34D399", "#6EE7B7"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={[styles.progressBarFill, { width: `${conversionProgress}%` }]}
-            />
-          </View>
-          <ThemedText style={styles.progressPercent}>{conversionProgress}%</ThemedText>
-          
-          <View style={styles.conversionSteps}>
-            <ConversionStep 
-              label="Validating tokens" 
-              isComplete={conversionProgress >= 30} 
-              isActive={conversionProgress < 30}
-            />
-            <ConversionStep 
-              label="Processing conversion" 
-              isComplete={conversionProgress >= 60} 
-              isActive={conversionProgress >= 30 && conversionProgress < 60}
-            />
-            <ConversionStep 
-              label="Allocating funds" 
-              isComplete={conversionProgress >= 90} 
-              isActive={conversionProgress >= 60 && conversionProgress < 90}
-            />
-            <ConversionStep 
-              label="Completing transfer" 
-              isComplete={conversionProgress >= 100} 
-              isActive={conversionProgress >= 90 && conversionProgress < 100}
-            />
-          </View>
-        </Animated.View>
-      ) : conversionComplete ? (
-        <Animated.View entering={FadeIn.duration(400)} style={styles.completeCard}>
-          <View style={styles.completeIcon}>
-            <Feather name="check-circle" size={32} color={Colors.dark.successBright} />
-          </View>
-          <ThemedText style={styles.completeTitle}>Conversion Complete</ThemedText>
-          <ThemedText style={styles.completeAmount}>{cashAmount}</ThemedText>
-          <ThemedText style={styles.completeSubtitle}>Available for immediate use</ThemedText>
-          
-          <View style={styles.fundingBadge}>
-            <Feather name="zap" size={16} color={Colors.dark.successBright} />
-            <ThemedText style={styles.fundingText}>15-minute funding unlocked</ThemedText>
-          </View>
-        </Animated.View>
-      ) : (
-        <Animated.View entering={FadeInDown.duration(500).delay(300)} style={styles.creditCard}>
-          <LinearGradient
-            colors={["#1a2f23", "#243d2e", "#2d4a38"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.creditCardGradient}
-          >
-            <View style={styles.creditCardHeader}>
-              <ThemedText style={styles.creditCardLabel}>AVAILABLE CREDIT LINE</ThemedText>
-              <Feather name="credit-card" size={20} color={Colors.dark.successBright} />
+      <Animated.View entering={FadeInDown.duration(400).delay(100)} style={styles.navigationContainer}>
+        <View style={styles.navigationPills}>
+          {NAVIGATION_PILLS.slice(0, 3).map((pill) => (
+            <View key={pill.id} style={[styles.navPill, pill.active && styles.navPillActive]}>
+              <ThemedText style={[styles.navPillText, pill.active && styles.navPillTextActive]}>
+                {pill.label}
+              </ThemedText>
             </View>
-            <ThemedText style={styles.creditAmount}>{availableCredit}</ThemedText>
-            <View style={styles.creditCardFooter}>
-              <ThemedText style={styles.creditNote}>Backed by your LedgerTokens</ThemedText>
-              <View style={styles.creditBadge}>
-                <Feather name="shield" size={12} color={Colors.dark.successBright} />
-                <ThemedText style={styles.creditBadgeText}>Secured</ThemedText>
-              </View>
+          ))}
+        </View>
+        <View style={styles.navigationPills}>
+          {NAVIGATION_PILLS.slice(3, 6).map((pill) => (
+            <View key={pill.id} style={styles.navPill}>
+              <ThemedText style={styles.navPillText}>{pill.label}</ThemedText>
             </View>
-          </LinearGradient>
-        </Animated.View>
-      )}
-
-      <Animated.View entering={FadeInDown.duration(500).delay(400)} style={styles.featuresCard}>
-        <ThemedText style={styles.featuresTitle}>Optimus Benefits</ThemedText>
-        <View style={styles.featuresList}>
-          <FeatureItem icon="zap" text="15-minute funding guarantee" highlight />
-          <FeatureItem icon="percent" text="Competitive interest rates" />
-          <FeatureItem icon="refresh-cw" text="Flexible repayment options" />
-          <FeatureItem icon="lock" text="No liquidation of assets" />
+          ))}
         </View>
       </Animated.View>
 
-      <View style={styles.spacer} />
-
-      {conversionComplete ? (
-        <Animated.View entering={FadeIn.duration(400)} style={styles.successBanner}>
-          <Feather name="check-circle" size={20} color={Colors.dark.successBright} />
-          <ThemedText style={styles.successText}>
-            Proceeding to your Dashboard...
-          </ThemedText>
+      <View style={styles.mainContent}>
+        <Animated.View entering={FadeInDown.duration(400).delay(150)} style={styles.primaryButtons}>
+          <GradientButton label="Balance" />
+          <GradientButton label="Converted into Cash" />
         </Animated.View>
-      ) : !isConverting ? (
-        <ConvertButton onPress={handleStartConversion} />
-      ) : null}
+
+        <Animated.View entering={FadeInDown.duration(400).delay(200)} style={styles.monetarySection}>
+          <View style={styles.monetaryRow}>
+            <View style={styles.monetaryPill}>
+              <ThemedText style={styles.monetaryText}>CST 3,000</ThemedText>
+            </View>
+            <View style={styles.monetaryEmpty} />
+          </View>
+          
+          <View style={styles.monetaryRow}>
+            <View style={styles.monetaryPill}>
+              <ThemedText style={styles.monetaryText}>CST 150,000</ThemedText>
+            </View>
+            <View style={[styles.monetaryPill, styles.monetaryPillBlue]}>
+              <ThemedText style={styles.monetaryText}>£ 150,000</ThemedText>
+            </View>
+          </View>
+
+          <View style={styles.addButtonsRow}>
+            <View style={styles.addButtonContainer}>
+              <AddButton />
+            </View>
+            <View style={styles.addButtonContainer}>
+              <AddButton />
+            </View>
+          </View>
+        </Animated.View>
+
+        <Animated.View entering={FadeInDown.duration(400).delay(250)} style={styles.actionGrid}>
+          {ACTION_BUTTONS.map((button, index) => (
+            <ActionButton key={button.id} label={button.label} index={index} />
+          ))}
+        </Animated.View>
+
+        <Animated.View entering={FadeInDown.duration(400).delay(300)} style={styles.chartsGrid}>
+          {MARKET_DATA.map((market, index) => (
+            <MarketChart key={market.id} market={market} index={index} />
+          ))}
+        </Animated.View>
+
+        <Animated.View entering={FadeIn.duration(400).delay(400)} style={styles.dashboardButton}>
+          <AnimatedPressable onPress={handleDashboardNavigation} style={styles.dashboardPressable}>
+            <View style={styles.dashboardButtonInner}>
+              <ThemedText style={styles.dashboardButtonText}>Continue to Dashboard</ThemedText>
+              <Feather name="arrow-right" size={16} color="#1a1a1a" />
+            </View>
+          </AnimatedPressable>
+        </Animated.View>
+      </View>
+
+      <Animated.View entering={FadeIn.duration(400).delay(350)} style={styles.screenNavigation}>
+        <View style={styles.navDot} />
+        <View style={styles.navDot} />
+        <View style={[styles.navDot, styles.navDotActive]} />
+        <View style={styles.navDot} />
+      </Animated.View>
     </AuthScreenScrollView>
   );
 }
 
-function FeatureItem({ icon, text, highlight }: { icon: keyof typeof Feather.glyphMap; text: string; highlight?: boolean }) {
-  return (
-    <View style={styles.featureItem}>
-      <Feather name={icon} size={16} color={highlight ? Colors.dark.successBright : Colors.dark.primary} />
-      <ThemedText style={[styles.featureText, highlight && styles.featureTextHighlight]}>{text}</ThemedText>
-    </View>
-  );
-}
-
-function ConversionStep({ label, isComplete, isActive }: { label: string; isComplete: boolean; isActive: boolean }) {
-  return (
-    <View style={styles.conversionStep}>
-      <View style={[
-        styles.conversionStepDot,
-        isComplete && styles.conversionStepDotComplete,
-        isActive && styles.conversionStepDotActive,
-      ]}>
-        {isComplete ? (
-          <Feather name="check" size={10} color="#1a1a1a" />
-        ) : null}
-      </View>
-      <ThemedText style={[
-        styles.conversionStepLabel,
-        isComplete && styles.conversionStepLabelComplete,
-        isActive && styles.conversionStepLabelActive,
-      ]}>
-        {label}
-      </ThemedText>
-    </View>
-  );
-}
-
-function ConvertButton({ onPress }: { onPress: () => void }) {
+function GradientButton({ label }: { label: string }) {
   const scale = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -277,337 +155,422 @@ function ConvertButton({ onPress }: { onPress: () => void }) {
   return (
     <AnimatedPressable
       onPressIn={() => {
-        scale.value = withSpring(0.97);
+        scale.value = withSpring(0.98);
       }}
       onPressOut={() => {
         scale.value = withSpring(1);
       }}
-      onPress={onPress}
-      style={[styles.convertButtonContainer, animatedStyle]}
+      style={[styles.gradientButton, animatedStyle]}
     >
-      <LinearGradient
-        colors={["#10B981", "#34D399", "#6EE7B7"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={styles.convertButton}
-      >
-        <Feather name="dollar-sign" size={18} color="#1a1a1a" />
-        <ThemedText style={styles.convertButtonText}>Convert to Cash</ThemedText>
-      </LinearGradient>
+      <View style={styles.gradientButtonInner}>
+        <ThemedText style={styles.gradientButtonText}>{label}</ThemedText>
+      </View>
     </AnimatedPressable>
+  );
+}
+
+function AddButton() {
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <AnimatedPressable
+      onPressIn={() => {
+        scale.value = withSpring(0.9);
+      }}
+      onPressOut={() => {
+        scale.value = withSpring(1);
+      }}
+      style={[styles.addButton, animatedStyle]}
+    >
+      <Feather name="plus" size={12} color="#ffffff" />
+    </AnimatedPressable>
+  );
+}
+
+function ActionButton({ label, index }: { label: string; index: number }) {
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <AnimatedPressable
+      onPressIn={() => {
+        scale.value = withSpring(0.95);
+      }}
+      onPressOut={() => {
+        scale.value = withSpring(1);
+      }}
+      style={[styles.actionButton, animatedStyle]}
+    >
+      <ThemedText style={styles.actionButtonText}>{label}</ThemedText>
+    </AnimatedPressable>
+  );
+}
+
+function MarketChart({ market, index }: { market: typeof MARKET_DATA[0]; index: number }) {
+  const lineColor = market.positive ? "rgba(0, 255, 102, 0.8)" : "rgba(255, 68, 68, 0.8)";
+  const gradientStartColor = market.positive ? "rgba(0, 255, 102, 0.3)" : "rgba(255, 68, 68, 0.3)";
+  const gradientEndColor = market.positive ? "rgba(0, 255, 102, 0.02)" : "rgba(255, 68, 68, 0.02)";
+  const dotColor = market.positive ? "#00ff66" : "#ff4444";
+
+  const getChartPath = () => {
+    switch (market.id) {
+      case "stock-price":
+        return "M 0 45 L 15 42 L 25 48 L 35 38 L 45 32 L 55 35 L 70 28 L 85 22 L 100 25 L 115 18 L 130 12 L 145 15 L 160 10 L 175 8 L 190 5 L 200 2";
+      case "interest-rates":
+        return "M 0 20 L 20 22 L 40 25 L 60 30 L 80 33 L 100 37 L 120 40 L 140 44 L 160 48 L 180 52 L 200 55";
+      case "exchange-rates":
+        return "M 0 28 L 20 30 L 40 27 L 60 32 L 80 35 L 100 33 L 120 38 L 140 40 L 160 43 L 180 45 L 200 48";
+      case "commodities":
+        return "M 0 35 L 15 30 L 30 38 L 45 32 L 60 30 L 75 26 L 90 25 L 105 22 L 120 18 L 135 15 L 150 12 L 165 10 L 180 8 L 200 5";
+      default:
+        return "";
+    }
+  };
+
+  const getAreaPath = () => {
+    const linePath = getChartPath();
+    return `${linePath} L 200 60 L 0 60 Z`;
+  };
+
+  return (
+    <View style={styles.chartCard}>
+      <View style={styles.chartHeader}>
+        <View style={styles.chartLabelContainer}>
+          <ThemedText style={styles.chartLabel}>{market.label}</ThemedText>
+          <View style={[styles.chartDot, { backgroundColor: "#00ff66" }]} />
+        </View>
+        <ThemedText style={[styles.chartChange, { color: market.positive ? "#00ff66" : "#ff4444" }]}>
+          {market.change}
+        </ThemedText>
+      </View>
+      
+      <View style={styles.chartContainer}>
+        <Svg width="100%" height={60} viewBox="0 0 200 60" preserveAspectRatio="none">
+          <Defs>
+            <LinearGradient id={`gradient-${market.id}`} x1="0%" y1="0%" x2="0%" y2="100%">
+              <Stop offset="0%" stopColor={gradientStartColor} />
+              <Stop offset="100%" stopColor={gradientEndColor} />
+            </LinearGradient>
+            <Pattern id={`grid-${market.id}`} width="20" height="20" patternUnits="userSpaceOnUse">
+              <Path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth={0.5} />
+            </Pattern>
+          </Defs>
+          
+          <Rect width="200" height="60" fill={`url(#grid-${market.id})`} />
+          
+          <Path
+            d={getAreaPath()}
+            fill={`url(#gradient-${market.id})`}
+          />
+          
+          <Path
+            d={getChartPath()}
+            stroke={lineColor}
+            strokeWidth={1.5}
+            fill="none"
+          />
+          
+          {market.id === "stock-price" ? (
+            <>
+              <Circle cx="0" cy="45" r="1.5" fill={dotColor} />
+              <Circle cx="45" cy="32" r="1.5" fill={dotColor} />
+              <Circle cx="100" cy="25" r="1.5" fill={dotColor} />
+              <Circle cx="145" cy="15" r="1.5" fill={dotColor} />
+              <Circle cx="200" cy="2" r="2" fill={dotColor} />
+            </>
+          ) : null}
+        </Svg>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   scrollContent: {
-    gap: Spacing.xl,
     paddingBottom: Spacing["3xl"],
   },
   header: {
-    alignItems: "center",
-  },
-  optimusBadge: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: "rgba(16, 185, 129, 0.1)",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: Spacing.lg,
-    borderWidth: 2,
-    borderColor: "rgba(16, 185, 129, 0.3)",
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "300",
-    color: Colors.dark.successBright,
-    letterSpacing: 2,
-    textAlign: "center",
-    marginBottom: Spacing.sm,
-  },
-  subtitle: {
-    fontSize: 14,
-    fontWeight: "300",
-    color: Colors.dark.sage,
-    letterSpacing: 0.5,
-    textAlign: "center",
-    lineHeight: 20,
-  },
-  conversionCard: {
-    backgroundColor: Colors.dark.cardGlass,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.dark.successBright,
-    padding: Spacing.lg,
-  },
-  conversionHeader: {
-    alignItems: "center",
-    marginBottom: Spacing.lg,
-  },
-  conversionLabel: {
-    fontSize: 10,
-    fontWeight: "300",
-    color: Colors.dark.sage,
-    letterSpacing: 2,
-  },
-  conversionContent: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.sm,
+    marginBottom: Spacing.xl,
   },
-  conversionSide: {
+  headerLeft: {
     flex: 1,
-    alignItems: "center",
-    gap: Spacing.sm,
   },
-  conversionArrow: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "rgba(16, 185, 129, 0.1)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  conversionAmount: {
-    fontSize: 18,
-    fontWeight: "400",
-    color: Colors.dark.primary,
-  },
-  cashAmount: {
-    color: Colors.dark.successBright,
-  },
-  conversionType: {
-    fontSize: 11,
-    fontWeight: "300",
-    color: Colors.dark.sage,
-  },
-  progressCard: {
-    backgroundColor: Colors.dark.cardGlass,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.dark.successBright,
-    padding: Spacing.lg,
-    alignItems: "center",
-  },
-  progressTitle: {
+  backText: {
     fontSize: 16,
     fontWeight: "400",
-    color: Colors.dark.cream,
-    marginBottom: Spacing.lg,
+    color: Colors.dark.text,
   },
-  progressBarContainer: {
-    width: "100%",
-    height: 8,
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
-    borderRadius: 4,
-    overflow: "hidden",
-  },
-  progressBarFill: {
-    height: "100%",
-    borderRadius: 4,
-  },
-  progressPercent: {
-    fontSize: 24,
-    fontWeight: "300",
-    color: Colors.dark.successBright,
-    marginTop: Spacing.md,
-  },
-  conversionSteps: {
-    width: "100%",
-    marginTop: Spacing.lg,
-    gap: Spacing.sm,
-  },
-  conversionStep: {
-    flexDirection: "row",
+  headerCenter: {
     alignItems: "center",
-    gap: Spacing.sm,
+    flex: 2,
   },
-  conversionStepDot: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    borderWidth: 1,
-    borderColor: Colors.dark.sage,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  conversionStepDotComplete: {
-    backgroundColor: Colors.dark.successBright,
-    borderColor: Colors.dark.successBright,
-  },
-  conversionStepDotActive: {
-    borderColor: Colors.dark.successBright,
-    backgroundColor: "rgba(16, 185, 129, 0.2)",
-  },
-  conversionStepLabel: {
-    fontSize: 12,
-    fontWeight: "300",
-    color: Colors.dark.sage,
-  },
-  conversionStepLabelComplete: {
-    color: Colors.dark.successBright,
-  },
-  conversionStepLabelActive: {
-    color: Colors.dark.successBright,
-  },
-  completeCard: {
-    backgroundColor: "rgba(16, 185, 129, 0.08)",
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: "rgba(16, 185, 129, 0.4)",
-    padding: Spacing.xl,
-    alignItems: "center",
-  },
-  completeIcon: {
-    marginBottom: Spacing.md,
-  },
-  completeTitle: {
+  title: {
     fontSize: 18,
     fontWeight: "400",
-    color: Colors.dark.successBright,
+    color: Colors.dark.text,
+    letterSpacing: 0.5,
+  },
+  subtitle: {
+    fontSize: 11,
+    fontWeight: "300",
+    color: Colors.dark.textSecondary,
+    marginTop: 2,
+  },
+  headerRight: {
+    flex: 1,
+    alignItems: "flex-end",
+  },
+  navigationContainer: {
+    paddingHorizontal: Spacing.lg,
+    marginBottom: Spacing.xl,
+  },
+  navigationPills: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: Spacing.sm,
     marginBottom: Spacing.sm,
   },
-  completeAmount: {
-    fontSize: 32,
-    fontWeight: "300",
-    color: Colors.dark.cream,
-    letterSpacing: 1,
-    marginBottom: Spacing.xs,
+  navPill: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.full,
+    backgroundColor: "transparent",
+    borderWidth: 1,
+    borderColor: "rgba(168, 196, 181, 0.3)",
   },
-  completeSubtitle: {
-    fontSize: 13,
-    fontWeight: "300",
-    color: Colors.dark.sage,
-    marginBottom: Spacing.lg,
+  navPillActive: {
+    backgroundColor: "rgba(74, 222, 128, 0.2)",
+    borderColor: "#4ade80",
   },
-  fundingBadge: {
+  navPillText: {
+    fontSize: 11,
+    fontWeight: "300",
+    color: Colors.dark.text,
+    letterSpacing: 0.3,
+  },
+  navPillTextActive: {
+    color: "#4ade80",
+    fontWeight: "400",
+  },
+  mainContent: {
+    paddingHorizontal: Spacing.lg,
+    gap: Spacing.lg,
+  },
+  primaryButtons: {
     flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.sm,
-    backgroundColor: "rgba(16, 185, 129, 0.15)",
+    gap: Spacing.md,
+  },
+  gradientButton: {
+    flex: 1,
+  },
+  gradientButtonInner: {
     paddingVertical: Spacing.sm,
     paddingHorizontal: Spacing.md,
     borderRadius: BorderRadius.full,
+    backgroundColor: "#4ade80",
+    alignItems: "center",
+    shadowColor: "#4ade80",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
+    borderWidth: 1,
+    borderColor: "rgba(74, 222, 128, 0.2)",
   },
-  fundingText: {
-    fontSize: 12,
-    fontWeight: "500",
-    color: Colors.dark.successBright,
+  gradientButtonText: {
+    fontSize: 11,
+    fontWeight: "400",
+    color: "#1a1a1a",
     letterSpacing: 0.3,
   },
-  creditCard: {
-    borderRadius: BorderRadius.md,
-    overflow: "hidden",
+  monetarySection: {
+    gap: Spacing.md,
   },
-  creditCardGradient: {
-    padding: Spacing.xl,
-  },
-  creditCardHeader: {
+  monetaryRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: Spacing.lg,
+    gap: Spacing.md,
   },
-  creditCardLabel: {
+  monetaryPill: {
+    flex: 1,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    borderRadius: BorderRadius.full,
+    backgroundColor: "rgba(20, 54, 30, 0.8)",
+    borderWidth: 1,
+    borderColor: "rgba(168, 196, 181, 0.3)",
+    alignItems: "center",
+    shadowColor: "#00ff64",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.12,
+    shadowRadius: 20,
+    elevation: 3,
+  },
+  monetaryPillBlue: {
+    shadowColor: "#6496ff",
+    shadowOpacity: 0.5,
+    shadowRadius: 25,
+  },
+  monetaryEmpty: {
+    flex: 1,
+  },
+  monetaryText: {
+    fontSize: 12,
+    fontWeight: "400",
+    color: "#E8D5B7",
+    letterSpacing: 0.5,
+  },
+  addButtonsRow: {
+    flexDirection: "row",
+    gap: Spacing.md,
+  },
+  addButtonContainer: {
+    flex: 1,
+    alignItems: "center",
+  },
+  addButton: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "#4ade80",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#4ade80",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 5,
+    borderWidth: 1,
+    borderColor: "rgba(74, 222, 128, 0.3)",
+  },
+  actionGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: Spacing.md,
+  },
+  actionButton: {
+    width: "48%",
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    borderRadius: BorderRadius.full,
+    backgroundColor: "#ece5d1",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#d4c5a9",
+  },
+  actionButtonText: {
     fontSize: 10,
-    fontWeight: "300",
-    color: Colors.dark.sage,
-    letterSpacing: 2,
+    fontWeight: "400",
+    color: "#5c4f3d",
+    letterSpacing: 0.3,
   },
-  creditAmount: {
-    fontSize: 32,
-    fontWeight: "300",
-    color: Colors.dark.successBright,
-    letterSpacing: 1,
-    marginBottom: Spacing.lg,
+  chartsGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: Spacing.md,
   },
-  creditCardFooter: {
+  chartCard: {
+    width: "48%",
+    backgroundColor: "rgba(20, 54, 30, 0.8)",
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: "rgba(168, 196, 181, 0.3)",
+    shadowColor: "#00ff64",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.08,
+    shadowRadius: 20,
+    elevation: 3,
+  },
+  chartHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    marginBottom: Spacing.sm,
   },
-  creditNote: {
-    fontSize: 11,
-    fontWeight: "300",
-    color: Colors.dark.sage,
-  },
-  creditBadge: {
+  chartLabelContainer: {
     flexDirection: "row",
     alignItems: "center",
     gap: Spacing.xs,
   },
-  creditBadgeText: {
-    fontSize: 10,
+  chartLabel: {
+    fontSize: 11,
     fontWeight: "400",
-    color: Colors.dark.successBright,
+    color: Colors.dark.text,
     letterSpacing: 0.5,
   },
-  featuresCard: {
-    backgroundColor: Colors.dark.cardGlass,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.dark.cardBorderGlass,
-    padding: Spacing.lg,
+  chartDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
-  featuresTitle: {
-    fontSize: 14,
-    fontWeight: "400",
-    color: Colors.dark.cream,
-    marginBottom: Spacing.md,
-  },
-  featuresList: {
-    gap: Spacing.sm,
-  },
-  featureItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.md,
-  },
-  featureText: {
-    fontSize: 13,
-    fontWeight: "300",
-    color: Colors.dark.sage,
-  },
-  featureTextHighlight: {
-    color: Colors.dark.successBright,
+  chartChange: {
+    fontSize: 11,
     fontWeight: "400",
   },
-  spacer: {
-    flex: 1,
-    minHeight: Spacing.xl,
+  chartContainer: {
+    height: 60,
+    overflow: "hidden",
   },
-  successBanner: {
+  dashboardButton: {
+    marginTop: Spacing.md,
+  },
+  dashboardPressable: {
+    borderRadius: BorderRadius.full,
+    overflow: "hidden",
+  },
+  dashboardButtonInner: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: Spacing.sm,
-    backgroundColor: "rgba(16, 185, 129, 0.1)",
-    paddingVertical: Spacing.lg,
+    paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.xl,
+    backgroundColor: "#4ade80",
     borderRadius: BorderRadius.full,
+    shadowColor: "#4ade80",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
   },
-  successText: {
+  dashboardButtonText: {
     fontSize: 14,
-    fontWeight: "400",
-    color: Colors.dark.successBright,
-    letterSpacing: 0.3,
-  },
-  convertButtonContainer: {
-    width: "100%",
-  },
-  convertButton: {
-    borderRadius: BorderRadius.full,
-    paddingVertical: Spacing.lg,
-    paddingHorizontal: Spacing.xl,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: Spacing.sm,
-  },
-  convertButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "500",
     color: "#1a1a1a",
     letterSpacing: 0.5,
+  },
+  screenNavigation: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: Spacing.sm,
+    marginTop: Spacing["2xl"],
+    paddingVertical: Spacing.md,
+  },
+  navDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "rgba(168, 196, 181, 0.3)",
+  },
+  navDotActive: {
+    backgroundColor: "#4ade80",
+    shadowColor: "#4ade80",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 6,
+    elevation: 3,
   },
 });

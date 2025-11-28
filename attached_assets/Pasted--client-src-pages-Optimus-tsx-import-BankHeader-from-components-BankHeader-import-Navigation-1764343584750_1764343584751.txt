@@ -1,0 +1,289 @@
+// client/src/pages/Optimus.tsx
+
+import BankHeader from "@/components/BankHeader";
+import NavigationPills from "@/components/NavigationPills";
+import ScreenNavigation from "@/components/ScreenNavigation";
+import DownloadButton from "@/components/DownloadButton";
+import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
+import { Plus } from "lucide-react";
+
+const actionButtons = [
+  { id: "bank-account", label: "Bank Account" },
+  { id: "transfer-pay", label: "Transfer/Pay" },
+  { id: "debit-credit", label: "Debit/Credit Card" },
+  { id: "invest", label: "Invest" }
+];
+
+const marketData = [
+  { id: "stock-price", label: "Nasdaq", change: "+16%" },
+  { id: "interest-rates", label: "Interest Rates", change: "-20%" },
+  { id: "exchange-rates", label: "Exchange Rates", change: "-3%" },
+  { id: "commodities", label: "Commodities", change: "+10%" }
+];
+
+export default function Optimus() {
+  return (
+    <div className="min-h-screen bg-background flex flex-col max-w-md mx-auto">
+      <BankHeader 
+        title="Optimus" 
+        subtitle="Powered by Pier"
+        onBack={() => window.history.back()} 
+        onProfile={() => console.log('Profile clicked')} 
+      />
+
+      <div className="flex-1 overflow-y-auto pb-6">
+        {/* Navigation Pills */}
+        <div className="px-6 pt-4">
+          <NavigationPills currentScreen="optimus" />
+        </div>
+
+        <div className="px-6 py-6 space-y-6">
+
+        {/* Primary Action Buttons */}
+        <div className="grid grid-cols-2 gap-3">
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            transition={{ type: "spring", stiffness: 400, damping: 17 }}
+          >
+            <Button
+              className="w-full h-8 rounded-full text-xs font-normal bg-gradient-to-r from-primary via-primary to-accent hover:from-primary/90 hover:via-primary/90 hover:to-accent/90 shadow-lg shadow-primary/30 border border-primary/20"
+              style={{ color: '#E5E4E2', fontFamily: 'var(--font-sans)' }}
+              data-testid="button-balance"
+            >
+              Balance
+            </Button>
+          </motion.div>
+
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            transition={{ type: "spring", stiffness: 400, damping: 17 }}
+          >
+            <Button
+              className="w-full h-8 rounded-full text-xs font-normal bg-gradient-to-r from-primary via-primary to-accent hover:from-primary/90 hover:via-primary/90 hover:to-accent/90 shadow-lg shadow-primary/30 border border-primary/20"
+              style={{ color: '#E5E4E2', fontFamily: 'var(--font-sans)' }}
+              data-testid="button-converted-cash"
+            >
+              Converted into Cash
+            </Button>
+          </motion.div>
+        </div>
+
+        {/* Monetary Containers */}
+        <div className="space-y-3">
+          {/* CST 3,000 - Left Side Only */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="px-4 py-2 rounded-full text-center text-xs border backdrop-blur-sm bg-card/80 border-card-border" style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.05em', fontWeight: 400, color: '#E8D5B7', boxShadow: '0 0 20px rgba(0, 255, 100, 0.12)' }} data-testid="amount-cst-3000">
+              CST 3,000
+            </div>
+          </div>
+          
+          {/* CST 150,000 and £ 150,000 Side by Side */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="px-4 py-2 rounded-full text-center text-xs border backdrop-blur-sm bg-card/80 border-card-border" style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.05em', fontWeight: 400, color: '#E8D5B7', boxShadow: '0 0 20px rgba(0, 255, 100, 0.12)' }} data-testid="amount-cst-150000">
+              CST 150,000
+            </div>
+            <div className="px-4 py-2 rounded-full text-center text-xs border backdrop-blur-sm bg-card/80 border-card-border" style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.05em', fontWeight: 400, color: '#E8D5B7', boxShadow: '0 0 25px rgba(100, 150, 255, 0.5)' }} data-testid="amount-gbp-150000">
+              £ 150,000
+            </div>
+          </div>
+          
+          {/* Add Buttons Below */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex justify-center">
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                className="w-6 h-6 rounded-full bg-gradient-to-br from-primary to-accent shadow-lg shadow-primary/40 flex items-center justify-center border border-primary/30"
+                data-testid="button-add-cst"
+              >
+                <Plus className="w-2.5 h-2.5 text-white" />
+              </motion.button>
+            </div>
+            <div className="flex justify-center">
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                className="w-6 h-6 rounded-full bg-gradient-to-br from-primary to-accent shadow-lg shadow-primary/40 flex items-center justify-center border border-primary/30"
+                data-testid="button-add-gbp"
+              >
+                <Plus className="w-2.5 h-2.5 text-white" />
+              </motion.button>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Buttons Grid */}
+        <div className="grid grid-cols-2 gap-3 pt-2">
+          {actionButtons.map((button, index) => (
+            <motion.div
+              key={button.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2, delay: index * 0.05 }}
+            >
+              <Button
+                variant="secondary"
+                className="w-full h-auto px-3 py-1.5 rounded-full font-normal shadow-sm hover:shadow-md transition-all duration-200"
+                style={{
+                  backgroundColor: '#ece5d1',
+                  color: '#5c4f3d',
+                  borderColor: '#d4c5a9',
+                  minHeight: 'auto',
+                  fontSize: '10px'
+                }}
+                data-testid={`button-${button.id}`}
+              >
+                {button.label}
+              </Button>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Market Charts Grid */}
+        <div className="grid grid-cols-2 gap-3 pt-2">
+          {marketData.map((market, index) => (
+            <motion.div
+              key={market.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2, delay: index * 0.05 }}
+              className="bg-card/80 backdrop-blur-sm rounded-2xl p-4 border border-card-border relative overflow-hidden"
+              style={{ boxShadow: '0 0 20px rgba(0, 255, 100, 0.08)' }}
+              data-testid={`chart-${market.id}`}
+            >
+              {/* Chart Header */}
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-normal text-foreground" style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.05em' }}>
+                    {market.label}
+                  </span>
+                  <div className="w-2 h-2 rounded-sm" style={{ backgroundColor: '#00ff66' }} />
+                </div>
+                <span className="text-xs font-normal" style={{ color: market.change.includes('-') ? '#ff4444' : '#00ff66' }}>
+                  {market.change}
+                </span>
+              </div>
+
+              {/* Bloomberg-style Chart Visualization */}
+              <div className="h-16 relative">
+                <svg
+                  viewBox="0 0 200 60"
+                  className="w-full h-full"
+                  preserveAspectRatio="none"
+                >
+                  <defs>
+                    <linearGradient id={`gradient-${market.id}`} x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor={market.change.includes('-') ? 'rgba(255, 68, 68, 0.3)' : 'rgba(0, 255, 102, 0.3)'} />
+                      <stop offset="100%" stopColor={market.change.includes('-') ? 'rgba(255, 68, 68, 0.02)' : 'rgba(0, 255, 102, 0.02)'} />
+                    </linearGradient>
+                    
+                    {/* Grid pattern */}
+                    <pattern id={`grid-${market.id}`} width="20" height="20" patternUnits="userSpaceOnUse">
+                      <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="0.5"/>
+                    </pattern>
+                  </defs>
+                  
+                  {/* Background grid */}
+                  <rect width="200" height="60" fill={`url(#grid-${market.id})`} />
+                  
+                  {/* Realistic market data path based on chart type */}
+                  {market.id === 'stock-price' && (
+                    <>
+                      {/* Nasdaq - rising trend */}
+                      <path
+                        d="M 0 45 L 15 42 L 25 48 L 35 38 L 45 32 L 55 35 L 70 28 L 85 22 L 100 25 L 115 18 L 130 12 L 145 15 L 160 10 L 175 8 L 190 5 L 200 2"
+                        stroke="rgba(0, 255, 102, 0.8)"
+                        strokeWidth="1.5"
+                        fill="none"
+                      />
+                      <path
+                        d="M 0 45 L 15 42 L 25 48 L 35 38 L 45 32 L 55 35 L 70 28 L 85 22 L 100 25 L 115 18 L 130 12 L 145 15 L 160 10 L 175 8 L 190 5 L 200 2 L 200 60 L 0 60 Z"
+                        fill={`url(#gradient-${market.id})`}
+                      />
+                    </>
+                  )}
+                  
+                  {market.id === 'interest-rates' && (
+                    <>
+                      {/* Interest rates - declining curve */}
+                      <path
+                        d="M 0 20 L 20 22 L 40 25 L 60 30 L 80 33 L 100 37 L 120 40 L 140 44 L 160 48 L 180 52 L 200 55"
+                        stroke="rgba(255, 68, 68, 0.8)"
+                        strokeWidth="1.5"
+                        fill="none"
+                      />
+                      <path
+                        d="M 0 20 L 20 22 L 40 25 L 60 30 L 80 33 L 100 37 L 120 40 L 140 44 L 160 48 L 180 52 L 200 55 L 200 60 L 0 60 Z"
+                        fill={`url(#gradient-${market.id})`}
+                      />
+                    </>
+                  )}
+                  
+                  {market.id === 'exchange-rates' && (
+                    <>
+                      {/* Exchange rates - slight decline */}
+                      <path
+                        d="M 0 28 L 20 30 L 40 27 L 60 32 L 80 35 L 100 33 L 120 38 L 140 40 L 160 43 L 180 45 L 200 48"
+                        stroke="rgba(255, 68, 68, 0.8)"
+                        strokeWidth="1.5"
+                        fill="none"
+                      />
+                      <path
+                        d="M 0 28 L 20 30 L 40 27 L 60 32 L 80 35 L 100 33 L 120 38 L 140 40 L 160 43 L 180 45 L 200 48 L 200 60 L 0 60 Z"
+                        fill={`url(#gradient-${market.id})`}
+                      />
+                    </>
+                  )}
+                  
+                  {market.id === 'commodities' && (
+                    <>
+                      {/* Commodities - rising trend */}
+                      <path
+                        d="M 0 35 L 15 30 L 30 38 L 45 32 L 60 30 L 75 26 L 90 25 L 105 22 L 120 18 L 135 15 L 150 12 L 165 10 L 180 8 L 200 5"
+                        stroke="rgba(0, 255, 102, 0.8)"
+                        strokeWidth="1.5"
+                        fill="none"
+                      />
+                      <path
+                        d="M 0 35 L 15 30 L 30 38 L 45 32 L 60 30 L 75 26 L 90 25 L 105 22 L 120 18 L 135 15 L 150 12 L 165 10 L 180 8 L 200 5 L 200 60 L 0 60 Z"
+                        fill={`url(#gradient-${market.id})`}
+                      />
+                    </>
+                  )}
+                  
+                  {/* Price points - dots on the line */}
+                  {market.id === 'stock-price' && (
+                    <>
+                      <circle cx="0" cy="45" r="1.5" fill="rgba(0, 255, 102, 1)" />
+                      <circle cx="45" cy="32" r="1.5" fill="rgba(0, 255, 102, 1)" />
+                      <circle cx="100" cy="25" r="1.5" fill="rgba(0, 255, 102, 1)" />
+                      <circle cx="145" cy="15" r="1.5" fill="rgba(0, 255, 102, 1)" />
+                      <circle cx="200" cy="2" r="2" fill="rgba(0, 255, 102, 1)" />
+                    </>
+                  )}
+                  
+                  {market.id === 'interest-rates' && (
+                    <>
+                      <circle cx="0" cy="20" r="1.5" fill="rgba(255, 68, 68, 1)" />
+                      <circle cx="60" cy="30" r="1.5" fill="rgba(255, 68, 68, 1)" />
+                      <circle cx="120" cy="40" r="1.5" fill="rgba(255, 68, 68, 1)" />
+                      <circle cx="180" cy="52" r="1.5" fill="rgba(255, 68, 68, 1)" />
+                      <circle cx="200" cy="55" r="2" fill="rgba(255, 68, 68, 1)" />
+                    </>
+                  )}
+                </svg>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+        </div>
+      </div>
+      
+      <ScreenNavigation />
+      <DownloadButton screenName="optimus" />
+    </div>
+  );
+}
