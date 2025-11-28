@@ -1,194 +1,249 @@
-import { useState } from "react";
-import { StyleSheet, View, TextInput } from "react-native";
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-
-import { ScreenKeyboardAwareScrollView } from "@/components/ScreenKeyboardAwareScrollView";
+import React from "react";
+import { View, StyleSheet, Pressable } from "react-native";
+import { Feather } from "@expo/vector-icons";
+import Animated, { FadeInDown } from "react-native-reanimated";
+import { ScreenScrollView } from "@/components/ScreenScrollView";
 import { ThemedText } from "@/components/ThemedText";
-import { Button } from "@/components/Button";
-import { useTheme } from "@/hooks/useTheme";
-import { Spacing, BorderRadius, Typography } from "@/constants/theme";
-import Spacer from "@/components/Spacer";
-import type { ProfileStackParamList } from "@/navigation/ProfileStackNavigator";
+import { Colors, Spacing, BorderRadius } from "@/constants/theme";
+import { useAuth } from "@/context/AuthContext";
 
-type ProfileScreenProps = {
-  navigation: NativeStackNavigationProp<ProfileStackParamList, "Profile">;
-};
+const VERIFICATION_BADGES = [
+  { id: "phone", label: "Phone Verified", icon: "phone" as const, verified: true },
+  { id: "id", label: "ID Verified", icon: "file-text" as const, verified: true },
+  { id: "biometric", label: "Biometrics", icon: "smartphone" as const, verified: true },
+];
 
-export default function ProfileScreen({ navigation }: ProfileScreenProps) {
-  const { theme, isDark } = useTheme();
-
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-
-  const handleSubmit = () => {
-    console.log("Form submitted:", { name, email, password });
-  };
-
-  const inputStyle = [
-    styles.input,
-    {
-      backgroundColor: theme.backgroundDefault,
-      color: theme.text,
-    },
-  ];
+export default function ProfileScreen() {
+  const { userData } = useAuth();
 
   return (
-    <ScreenKeyboardAwareScrollView>
-      <View style={styles.section}>
-        <ThemedText type="h1">Heading 1</ThemedText>
-        <ThemedText type="small" style={styles.meta}>
-          32px • Bold
+    <ScreenScrollView contentContainerStyle={styles.scrollContent}>
+      <Animated.View entering={FadeInDown.duration(600).delay(100)} style={styles.profileHeader}>
+        <View style={styles.avatarContainer}>
+          <ThemedText type="h1" style={{ color: Colors.dark.primary }}>
+            {userData?.firstName?.[0] || "V"}
+            {userData?.lastName?.[0] || "P"}
+          </ThemedText>
+        </View>
+        <ThemedText type="h2" style={styles.profileName}>
+          {userData?.firstName} {userData?.lastName}
         </ThemedText>
-      </View>
-
-      <View style={styles.section}>
-        <ThemedText type="h2">Heading 2</ThemedText>
-        <ThemedText type="small" style={styles.meta}>
-          28px • Bold
+        <ThemedText type="body" style={{ color: Colors.dark.textSecondary }}>
+          Account: VP-{Math.floor(Math.random() * 900000 + 100000)}
         </ThemedText>
-      </View>
+        <Pressable style={styles.editButton}>
+          <Feather name="edit-2" size={16} color={Colors.dark.primary} />
+          <ThemedText type="body" style={{ color: Colors.dark.primary }}>
+            Edit Profile
+          </ThemedText>
+        </Pressable>
+      </Animated.View>
 
-      <View style={styles.section}>
-        <ThemedText type="h3">Heading 3</ThemedText>
-        <ThemedText type="small" style={styles.meta}>
-          24px • Semi-Bold
+      <Animated.View entering={FadeInDown.duration(600).delay(200)}>
+        <ThemedText type="label" style={styles.sectionLabel}>
+          VERIFICATION STATUS
         </ThemedText>
-      </View>
+        <View style={styles.badgesContainer}>
+          {VERIFICATION_BADGES.map((badge) => (
+            <View key={badge.id} style={styles.badge}>
+              <View
+                style={[
+                  styles.badgeIcon,
+                  badge.verified && styles.badgeIconVerified,
+                ]}
+              >
+                <Feather
+                  name={badge.verified ? "check" : badge.icon}
+                  size={16}
+                  color={badge.verified ? Colors.dark.success : Colors.dark.textSecondary}
+                />
+              </View>
+              <ThemedText type="small" style={styles.badgeLabel}>
+                {badge.label}
+              </ThemedText>
+            </View>
+          ))}
+        </View>
+      </Animated.View>
 
-      <View style={styles.section}>
-        <ThemedText type="h4">Heading 4</ThemedText>
-        <ThemedText type="small" style={styles.meta}>
-          20px • Semi-Bold
+      <Animated.View entering={FadeInDown.duration(600).delay(300)}>
+        <ThemedText type="label" style={styles.sectionLabel}>
+          PERSONAL INFORMATION
         </ThemedText>
-      </View>
+        <View style={styles.infoCard}>
+          <InfoRow label="Email" value={userData?.email || "Not provided"} />
+          <InfoRow label="Phone" value={userData?.phoneNumber || "Not provided"} />
+          <InfoRow
+            label="Address"
+            value={
+              userData?.address
+                ? `${userData.address.street}, ${userData.address.city}`
+                : "Not provided"
+            }
+          />
+          <InfoRow
+            label="Country"
+            value={userData?.address?.country || "Not provided"}
+            isLast
+          />
+        </View>
+      </Animated.View>
 
-      <View style={styles.section}>
-        <ThemedText type="body">
-          Body text - This is the default text style for paragraphs and general
-          content.
+      <Animated.View entering={FadeInDown.duration(600).delay(400)}>
+        <ThemedText type="label" style={styles.sectionLabel}>
+          ACCOUNT SUMMARY
         </ThemedText>
-        <ThemedText type="small" style={styles.meta}>
-          16px • Regular
-        </ThemedText>
-      </View>
+        <View style={styles.summaryGrid}>
+          <View style={styles.summaryCard}>
+            <Feather name="credit-card" size={24} color={Colors.dark.primary} />
+            <ThemedText type="h3" style={styles.summaryValue}>
+              3
+            </ThemedText>
+            <ThemedText type="small" style={{ color: Colors.dark.textSecondary }}>
+              Active Accounts
+            </ThemedText>
+          </View>
+          <View style={styles.summaryCard}>
+            <Feather name="calendar" size={24} color={Colors.dark.primary} />
+            <ThemedText type="h3" style={styles.summaryValue}>
+              2024
+            </ThemedText>
+            <ThemedText type="small" style={{ color: Colors.dark.textSecondary }}>
+              Member Since
+            </ThemedText>
+          </View>
+        </View>
+      </Animated.View>
+    </ScreenScrollView>
+  );
+}
 
-      <View style={styles.section}>
-        <ThemedText type="small">
-          Small text - Used for captions, labels, and secondary information.
-        </ThemedText>
-        <ThemedText type="small" style={styles.meta}>
-          14px • Regular
-        </ThemedText>
-      </View>
-
-      <View style={styles.section}>
-        <ThemedText type="link">Link text - Interactive elements</ThemedText>
-        <ThemedText type="small" style={styles.meta}>
-          16px • Regular • Colored
-        </ThemedText>
-      </View>
-
-      <Spacer height={Spacing["4xl"]} />
-
-      <View style={styles.fieldContainer}>
-        <ThemedText type="small" style={styles.label}>
-          Name
-        </ThemedText>
-        <TextInput
-          style={inputStyle}
-          value={name}
-          onChangeText={setName}
-          placeholder="Enter your name"
-          placeholderTextColor={isDark ? "#9BA1A6" : "#687076"}
-          autoCapitalize="words"
-          returnKeyType="next"
-        />
-      </View>
-
-      <Spacer height={Spacing.lg} />
-
-      <View style={styles.fieldContainer}>
-        <ThemedText type="small" style={styles.label}>
-          Email
-        </ThemedText>
-        <TextInput
-          style={inputStyle}
-          value={email}
-          onChangeText={setEmail}
-          placeholder="your.email@example.com"
-          placeholderTextColor={isDark ? "#9BA1A6" : "#687076"}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          returnKeyType="next"
-        />
-      </View>
-
-      <Spacer height={Spacing.lg} />
-
-      <View style={styles.fieldContainer}>
-        <ThemedText type="small" style={styles.label}>
-          Password
-        </ThemedText>
-        <TextInput
-          style={inputStyle}
-          value={password}
-          onChangeText={setPassword}
-          placeholder="Enter a password"
-          placeholderTextColor={isDark ? "#9BA1A6" : "#687076"}
-          secureTextEntry
-          autoCapitalize="none"
-          returnKeyType="next"
-        />
-      </View>
-
-      <Spacer height={Spacing.lg} />
-
-      <Button onPress={handleSubmit}>Submit Form</Button>
-
-      <Spacer height={Spacing["2xl"]} />
-
-      <ThemedText type="h3" style={styles.sectionTitle}>
-        Testing
+function InfoRow({
+  label,
+  value,
+  isLast = false,
+}: {
+  label: string;
+  value: string;
+  isLast?: boolean;
+}) {
+  return (
+    <View style={[styles.infoRow, !isLast && styles.infoRowBorder]}>
+      <ThemedText type="body" style={{ color: Colors.dark.textSecondary }}>
+        {label}
       </ThemedText>
-      <Spacer height={Spacing.md} />
-      <Button
-        onPress={() => navigation.navigate("Crash")}
-        style={styles.crashButton}
-      >
-        Crash App
-      </Button>
-    </ScreenKeyboardAwareScrollView>
+      <ThemedText type="body" style={styles.infoValue}>
+        {value}
+      </ThemedText>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  section: {
-    marginBottom: Spacing["3xl"],
+  scrollContent: {
+    gap: Spacing["2xl"],
   },
-  meta: {
-    opacity: 0.5,
-    marginTop: Spacing.sm,
+  profileHeader: {
+    alignItems: "center",
+    paddingVertical: Spacing.lg,
   },
-  fieldContainer: {
-    width: "100%",
+  avatarContainer: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: Colors.dark.backgroundDefault,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: Spacing.lg,
+    borderWidth: 2,
+    borderColor: Colors.dark.primary,
   },
-  label: {
-    marginBottom: Spacing.sm,
-    fontWeight: "600",
-    opacity: 0.8,
+  profileName: {
+    color: Colors.dark.text,
+    marginBottom: Spacing.xs,
   },
-  input: {
-    height: Spacing.inputHeight,
-    borderWidth: 0,
-    borderRadius: BorderRadius.md,
+  editButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+    marginTop: Spacing.lg,
+    paddingVertical: Spacing.sm,
     paddingHorizontal: Spacing.lg,
-    fontSize: Typography.body.fontSize,
+    borderRadius: BorderRadius.full,
+    borderWidth: 1,
+    borderColor: Colors.dark.primary,
   },
-  sectionTitle: {
-    marginTop: Spacing.xl,
+  sectionLabel: {
+    color: Colors.dark.textSecondary,
+    marginBottom: Spacing.sm,
+    marginLeft: Spacing.xs,
   },
-  crashButton: {
-    backgroundColor: "#FF3B30",
+  badgesContainer: {
+    flexDirection: "row",
+    gap: Spacing.md,
+  },
+  badge: {
+    flex: 1,
+    backgroundColor: Colors.dark.backgroundDefault,
+    borderRadius: BorderRadius.sm,
+    padding: Spacing.lg,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: Colors.dark.border,
+  },
+  badgeIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.dark.backgroundSecondary,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: Spacing.sm,
+  },
+  badgeIconVerified: {
+    backgroundColor: "rgba(16, 185, 129, 0.1)",
+  },
+  badgeLabel: {
+    color: Colors.dark.text,
+    textAlign: "center",
+  },
+  infoCard: {
+    backgroundColor: Colors.dark.backgroundDefault,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.lg,
+    borderWidth: 1,
+    borderColor: Colors.dark.border,
+  },
+  infoRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: Spacing.md,
+  },
+  infoRowBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.dark.border,
+  },
+  infoValue: {
+    color: Colors.dark.text,
+    flex: 1,
+    textAlign: "right",
+  },
+  summaryGrid: {
+    flexDirection: "row",
+    gap: Spacing.md,
+  },
+  summaryCard: {
+    flex: 1,
+    backgroundColor: Colors.dark.backgroundDefault,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.xl,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: Colors.dark.border,
+  },
+  summaryValue: {
+    color: Colors.dark.text,
+    marginVertical: Spacing.sm,
   },
 });
