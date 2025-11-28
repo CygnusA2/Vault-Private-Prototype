@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet, Pressable } from "react-native";
+import { View, StyleSheet, Pressable, ScrollView } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
-  withRepeat,
-  withSequence,
+  withDelay,
   withTiming,
-  Easing,
   FadeInDown,
   FadeIn,
 } from "react-native-reanimated";
@@ -20,263 +18,197 @@ import { useAuth } from "@/context/AuthContext";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
+const NAVIGATION_PILLS = [
+  { id: "full-wallet", label: "Full Wallet" },
+  { id: "optimus", label: "Optimus" },
+  { id: "risk-metrics", label: "Risk Metrics" },
+  { id: "blocks", label: "Blocks" },
+  { id: "card-m", label: "Card M" },
+  { id: "sentinel", label: "Sentinel" },
+];
+
+const ACTION_BUTTONS = [
+  { id: "partially", label: "Partially" },
+  { id: "entire-amount", label: "Entire Amount" },
+  { id: "bank-account", label: "Bank Account" },
+  { id: "savings", label: "Savings" },
+  { id: "debit-credit-card", label: "Debit/Credit Card" },
+  { id: "invest", label: "Invest" },
+  { id: "transfer", label: "Transfer", fullWidth: true },
+];
+
 export default function LedgerTokenScreen() {
   const { setNeedsLedgerToken, setNeedsOptimus } = useAuth();
-  const [isTokenizing, setIsTokenizing] = useState(false);
-  const [tokenizationProgress, setTokenizationProgress] = useState(0);
-  const [tokenizationComplete, setTokenizationComplete] = useState(false);
-  const rotateAnim = useSharedValue(0);
-  const scaleAnim = useSharedValue(1);
+  const [transformActive, setTransformActive] = useState(false);
+  const [reverseActive, setReverseActive] = useState(false);
+  const [convertActive, setConvertActive] = useState(false);
 
-  const tokenValue = "8,920,000";
-  const ledgerTokens = "8,920";
-  const conversionRate = "1 LT = $1,000";
-
-  useEffect(() => {
-    if (isTokenizing) {
-      rotateAnim.value = withRepeat(
-        withTiming(360, { duration: 2000, easing: Easing.linear }),
-        -1,
-        false
-      );
-      scaleAnim.value = withRepeat(
-        withSequence(
-          withTiming(1.05, { duration: 600 }),
-          withTiming(1, { duration: 600 })
-        ),
-        -1,
-        false
-      );
-    }
-  }, [isTokenizing]);
-
-  useEffect(() => {
-    if (tokenizationComplete) {
-      const timer = setTimeout(() => {
-        setNeedsLedgerToken(false);
-        setNeedsOptimus(true);
-      }, 1500);
-      return () => clearTimeout(timer);
-    }
-  }, [tokenizationComplete]);
-
-  const rotateStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${rotateAnim.value}deg` }],
-  }));
-
-  const scaleStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scaleAnim.value }],
-  }));
-
-  const handleStartTokenization = () => {
-    if (isTokenizing || tokenizationComplete) return;
-    
-    setIsTokenizing(true);
-    setTokenizationProgress(0);
-
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += 2;
-      setTokenizationProgress(Math.min(progress, 100));
-      
-      if (progress >= 100) {
-        clearInterval(interval);
-        setTimeout(() => {
-          setIsTokenizing(false);
-          setTokenizationComplete(true);
-        }, 500);
-      }
-    }, 60);
+  const handleTransform = () => {
+    setTransformActive(true);
+    setTimeout(() => setTransformActive(false), 500);
   };
 
-  const handleContinue = () => {
-    setNeedsLedgerToken(false);
-    setNeedsOptimus(true);
+  const handleReverse = () => {
+    setReverseActive(true);
+    setTimeout(() => setReverseActive(false), 500);
+  };
+
+  const handleConvert = () => {
+    setConvertActive(true);
+    setTimeout(() => {
+      setConvertActive(false);
+      setNeedsLedgerToken(false);
+      setNeedsOptimus(true);
+    }, 1500);
   };
 
   return (
     <AuthScreenScrollView contentContainerStyle={styles.scrollContent}>
-      <Animated.View entering={FadeInDown.duration(500).delay(100)} style={styles.header}>
-        <Animated.View style={[styles.tokenBadge, isTokenizing && scaleStyle]}>
-          {isTokenizing ? (
-            <Animated.View style={rotateStyle}>
-              <Feather name="loader" size={32} color={Colors.dark.primary} />
-            </Animated.View>
-          ) : tokenizationComplete ? (
-            <Feather name="check-circle" size={32} color={Colors.dark.successBright} />
-          ) : (
-            <Feather name="hexagon" size={32} color={Colors.dark.primary} />
-          )}
-        </Animated.View>
-        <ThemedText style={styles.title}>LedgerToken</ThemedText>
-        <ThemedText style={styles.subtitle}>
-          {tokenizationComplete 
-            ? "Your assets have been successfully tokenized"
-            : "Convert your verified illiquid assets into secure LedgerTokens"
-          }
-        </ThemedText>
-      </Animated.View>
-
-      <Animated.View entering={FadeInDown.duration(500).delay(200)} style={styles.conversionCard}>
-        <View style={styles.conversionHeader}>
-          <ThemedText style={styles.conversionLabel}>ASSET TO TOKEN CONVERSION</ThemedText>
+      <Animated.View entering={FadeInDown.duration(400)} style={styles.header}>
+        <View style={styles.headerLeft}>
+          <ThemedText style={styles.backText}>Back</ThemedText>
         </View>
-        
-        <View style={styles.conversionContent}>
-          <View style={styles.conversionSide}>
-            <Feather name="briefcase" size={24} color={Colors.dark.cream} />
-            <ThemedText style={styles.conversionAmount}>${tokenValue}</ThemedText>
-            <ThemedText style={styles.conversionType}>Illiquid Assets</ThemedText>
-          </View>
-          
-          <View style={styles.conversionArrow}>
-            <Feather name="arrow-right" size={20} color={Colors.dark.primary} />
-          </View>
-          
-          <View style={styles.conversionSide}>
-            <Feather name="hexagon" size={24} color={Colors.dark.primary} />
-            <ThemedText style={[styles.conversionAmount, styles.tokenAmount]}>{ledgerTokens} LT</ThemedText>
-            <ThemedText style={styles.conversionType}>LedgerTokens</ThemedText>
-          </View>
+        <View style={styles.headerCenter}>
+          <ThemedText style={styles.title}>Ledger Token</ThemedText>
+          <ThemedText style={styles.subtitle}>Powered by Peter</ThemedText>
         </View>
-
-        <View style={styles.rateContainer}>
-          <Feather name="info" size={14} color={Colors.dark.sage} />
-          <ThemedText style={styles.rateText}>Conversion Rate: {conversionRate}</ThemedText>
+        <View style={styles.headerRight}>
+          <Feather name="user" size={20} color={Colors.dark.text} />
         </View>
       </Animated.View>
 
-      {isTokenizing ? (
-        <Animated.View entering={FadeIn.duration(400)} style={styles.progressCard}>
-          <ThemedText style={styles.progressTitle}>Tokenization in Progress</ThemedText>
-          <View style={styles.progressBarContainer}>
-            <LinearGradient
-              colors={[Colors.dark.primary, "#D4B872"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={[styles.progressBarFill, { width: `${tokenizationProgress}%` }]}
-            />
-          </View>
-          <ThemedText style={styles.progressPercent}>{tokenizationProgress}%</ThemedText>
-          
-          <View style={styles.progressSteps}>
-            <ProgressStep 
-              label="Verifying assets" 
-              isComplete={tokenizationProgress >= 25} 
-              isActive={tokenizationProgress < 25}
-            />
-            <ProgressStep 
-              label="Creating tokens" 
-              isComplete={tokenizationProgress >= 50} 
-              isActive={tokenizationProgress >= 25 && tokenizationProgress < 50}
-            />
-            <ProgressStep 
-              label="Securing on ledger" 
-              isComplete={tokenizationProgress >= 75} 
-              isActive={tokenizationProgress >= 50 && tokenizationProgress < 75}
-            />
-            <ProgressStep 
-              label="Finalizing" 
-              isComplete={tokenizationProgress >= 100} 
-              isActive={tokenizationProgress >= 75 && tokenizationProgress < 100}
-            />
-          </View>
-        </Animated.View>
-      ) : tokenizationComplete ? (
-        <Animated.View entering={FadeIn.duration(400)} style={styles.completeCard}>
-          <View style={styles.completeIcon}>
-            <Feather name="shield" size={28} color={Colors.dark.successBright} />
-          </View>
-          <ThemedText style={styles.completeTitle}>Tokenization Complete</ThemedText>
-          <ThemedText style={styles.completeSubtitle}>
-            Your {ledgerTokens} LedgerTokens are now secured on the distributed ledger
-          </ThemedText>
-          
-          <View style={styles.tokenStats}>
-            <View style={styles.tokenStat}>
-              <ThemedText style={styles.tokenStatValue}>{ledgerTokens}</ThemedText>
-              <ThemedText style={styles.tokenStatLabel}>Total LT</ThemedText>
+      <Animated.View entering={FadeInDown.duration(400).delay(100)} style={styles.navigationContainer}>
+        <View style={styles.navigationPills}>
+          {NAVIGATION_PILLS.slice(0, 3).map((pill) => (
+            <View 
+              key={pill.id} 
+              style={[
+                styles.navPill, 
+                pill.id === "optimus" && styles.navPillActive
+              ]}
+            >
+              <ThemedText style={styles.navPillText}>{pill.label}</ThemedText>
             </View>
-            <View style={styles.tokenStatDivider} />
-            <View style={styles.tokenStat}>
-              <ThemedText style={styles.tokenStatValue}>100%</ThemedText>
-              <ThemedText style={styles.tokenStatLabel}>Verified</ThemedText>
+          ))}
+        </View>
+        <View style={styles.navigationPills}>
+          {NAVIGATION_PILLS.slice(3, 6).map((pill) => (
+            <View key={pill.id} style={styles.navPill}>
+              <ThemedText style={styles.navPillText}>{pill.label}</ThemedText>
             </View>
-            <View style={styles.tokenStatDivider} />
-            <View style={styles.tokenStat}>
-              <ThemedText style={styles.tokenStatValue}>Secured</ThemedText>
-              <ThemedText style={styles.tokenStatLabel}>Status</ThemedText>
-            </View>
-          </View>
-        </Animated.View>
-      ) : (
-        <Animated.View entering={FadeInDown.duration(500).delay(300)} style={styles.benefitsCard}>
-          <ThemedText style={styles.benefitsTitle}>Token Benefits</ThemedText>
-          <View style={styles.benefitsList}>
-            <BenefitItem icon="shield" text="Secured on distributed ledger" />
-            <BenefitItem icon="zap" text="Instant liquidity access" />
-            <BenefitItem icon="lock" text="Bank-grade encryption" />
-            <BenefitItem icon="refresh-cw" text="Reversible at any time" />
-          </View>
-        </Animated.View>
-      )}
-
-      <Animated.View entering={FadeInDown.duration(500).delay(400)} style={styles.infoCard}>
-        <Feather name="shield" size={18} color={Colors.dark.primary} />
-        <ThemedText style={styles.infoText}>
-          LedgerTokens are backed 1:1 by your verified illiquid assets and can be instantly converted to Optimus cash at any time.
-        </ThemedText>
+          ))}
+        </View>
       </Animated.View>
 
-      <View style={styles.spacer} />
+      <Animated.View entering={FadeInDown.duration(400).delay(200)} style={styles.mainContent}>
+        <PrimaryButton 
+          label="Transform" 
+          onPress={handleTransform} 
+          isActive={transformActive}
+        />
 
-      {tokenizationComplete ? (
-        <Animated.View entering={FadeIn.duration(400)} style={styles.successBanner}>
-          <Feather name="arrow-right-circle" size={20} color={Colors.dark.successBright} />
-          <ThemedText style={styles.successText}>
-            Proceeding to Optimus conversion...
-          </ThemedText>
+        <View style={styles.propertySection}>
+          <View style={styles.propertyRow}>
+            <View style={styles.propertyColumn}>
+              <ThemedText style={styles.propertyLabel}>Property 1 Value</ThemedText>
+              <View style={styles.valuePillSecondary}>
+                <ThemedText style={styles.valuePillText}>£ 5,000.000</ThemedText>
+              </View>
+            </View>
+            <View style={styles.propertyColumn}>
+              <ThemedText style={styles.propertyLabel}>Transformed Value</ThemedText>
+              <View style={styles.valuePillGreen}>
+                <ThemedText style={styles.valuePillText}>CST 3,000</ThemedText>
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.propertyRow}>
+            <View style={styles.propertyColumn}>
+              <ThemedText style={styles.propertyLabel}>Property 2 Value</ThemedText>
+              <View style={styles.valuePillSecondary}>
+                <ThemedText style={styles.valuePillText}>£ 2,000.000</ThemedText>
+              </View>
+            </View>
+            <View style={styles.propertyColumn}>
+              <ThemedText style={styles.propertyLabel}>Transformed Value</ThemedText>
+              <View style={styles.valuePillGreen}>
+                <ThemedText style={styles.valuePillText}>CST 150,000</ThemedText>
+              </View>
+            </View>
+          </View>
+        </View>
+
+        <PrimaryButton 
+          label="Reverse" 
+          onPress={handleReverse}
+          isActive={reverseActive}
+        />
+
+        <View style={styles.reverseSection}>
+          <View style={styles.propertyRow}>
+            <View style={styles.propertyColumn}>
+              <ThemedText style={styles.propertyLabel}>Property Value</ThemedText>
+              <View style={styles.valuePillPurple}>
+                <ThemedText style={styles.valuePillTextEmpty}> </ThemedText>
+              </View>
+            </View>
+            <View style={styles.propertyColumn}>
+              <ThemedText style={styles.propertyLabel}>Reversed Value</ThemedText>
+              <View style={styles.valuePillCream}>
+                <ThemedText style={styles.valuePillTextEmpty}> </ThemedText>
+              </View>
+            </View>
+          </View>
+        </View>
+
+        <PrimaryButton 
+          label="Convert into Cash" 
+          onPress={handleConvert}
+          isActive={convertActive}
+        />
+
+        <Animated.View entering={FadeInDown.duration(400).delay(300)} style={styles.actionGrid}>
+          <View style={styles.actionGridRow}>
+            {ACTION_BUTTONS.slice(0, 2).map((btn) => (
+              <ActionButton key={btn.id} label={btn.label} />
+            ))}
+          </View>
+          <View style={styles.actionGridRow}>
+            {ACTION_BUTTONS.slice(2, 4).map((btn) => (
+              <ActionButton key={btn.id} label={btn.label} />
+            ))}
+          </View>
+          <View style={styles.actionGridRow}>
+            {ACTION_BUTTONS.slice(4, 6).map((btn) => (
+              <ActionButton key={btn.id} label={btn.label} />
+            ))}
+          </View>
+          <View style={styles.actionGridRowFull}>
+            <ActionButton label="Transfer" fullWidth />
+          </View>
         </Animated.View>
-      ) : !isTokenizing ? (
-        <TokenizeButton onPress={handleStartTokenization} />
-      ) : null}
+      </Animated.View>
+
+      <Animated.View entering={FadeIn.duration(400).delay(400)} style={styles.screenNavigation}>
+        <View style={styles.navDot} />
+        <View style={[styles.navDot, styles.navDotActive]} />
+        <View style={styles.navDot} />
+        <View style={styles.navDot} />
+      </Animated.View>
     </AuthScreenScrollView>
   );
 }
 
-function BenefitItem({ icon, text }: { icon: keyof typeof Feather.glyphMap; text: string }) {
-  return (
-    <View style={styles.benefitItem}>
-      <Feather name={icon} size={16} color={Colors.dark.primary} />
-      <ThemedText style={styles.benefitText}>{text}</ThemedText>
-    </View>
-  );
-}
-
-function ProgressStep({ label, isComplete, isActive }: { label: string; isComplete: boolean; isActive: boolean }) {
-  return (
-    <View style={styles.progressStep}>
-      <View style={[
-        styles.progressStepDot,
-        isComplete && styles.progressStepDotComplete,
-        isActive && styles.progressStepDotActive,
-      ]}>
-        {isComplete ? (
-          <Feather name="check" size={10} color="#1a1a1a" />
-        ) : null}
-      </View>
-      <ThemedText style={[
-        styles.progressStepLabel,
-        isComplete && styles.progressStepLabelComplete,
-        isActive && styles.progressStepLabelActive,
-      ]}>
-        {label}
-      </ThemedText>
-    </View>
-  );
-}
-
-function TokenizeButton({ onPress }: { onPress: () => void }) {
+function PrimaryButton({ 
+  label, 
+  onPress, 
+  isActive = false 
+}: { 
+  label: string; 
+  onPress: () => void; 
+  isActive?: boolean;
+}) {
   const scale = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -286,329 +218,283 @@ function TokenizeButton({ onPress }: { onPress: () => void }) {
   return (
     <AnimatedPressable
       onPressIn={() => {
-        scale.value = withSpring(0.97);
+        scale.value = withSpring(0.95);
       }}
       onPressOut={() => {
         scale.value = withSpring(1);
       }}
       onPress={onPress}
-      style={[styles.tokenizeButtonContainer, animatedStyle]}
+      style={[styles.primaryButton, animatedStyle]}
     >
       <LinearGradient
-        colors={[Colors.dark.primary, "#D4B872", "#E5C88A"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={styles.tokenizeButton}
+        colors={isActive ? ["#22c55e", "#4ade80"] : ["#4ade80", "#22c55e"]}
+        style={styles.primaryButtonGradient}
       >
-        <Feather name="hexagon" size={18} color="#1a1a1a" />
-        <ThemedText style={styles.tokenizeButtonText}>Start Tokenization</ThemedText>
+        <ThemedText style={styles.primaryButtonText}>{label}</ThemedText>
       </LinearGradient>
+    </AnimatedPressable>
+  );
+}
+
+function ActionButton({ label, fullWidth = false }: { label: string; fullWidth?: boolean }) {
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <AnimatedPressable
+      onPressIn={() => {
+        scale.value = withSpring(0.95);
+      }}
+      onPressOut={() => {
+        scale.value = withSpring(1);
+      }}
+      style={[
+        styles.actionButton, 
+        fullWidth && styles.actionButtonFullWidth,
+        animatedStyle
+      ]}
+    >
+      <ThemedText style={styles.actionButtonText}>{label}</ThemedText>
     </AnimatedPressable>
   );
 }
 
 const styles = StyleSheet.create({
   scrollContent: {
-    gap: Spacing.xl,
     paddingBottom: Spacing["3xl"],
   },
   header: {
-    alignItems: "center",
-  },
-  tokenBadge: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: "rgba(201, 169, 97, 0.1)",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: Spacing.lg,
-    borderWidth: 2,
-    borderColor: "rgba(201, 169, 97, 0.3)",
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "300",
-    color: Colors.dark.cream,
-    letterSpacing: 1,
-    textAlign: "center",
-    marginBottom: Spacing.sm,
-  },
-  subtitle: {
-    fontSize: 14,
-    fontWeight: "300",
-    color: Colors.dark.sage,
-    letterSpacing: 0.5,
-    textAlign: "center",
-    lineHeight: 20,
-  },
-  conversionCard: {
-    backgroundColor: Colors.dark.cardGlass,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.dark.primary,
-    padding: Spacing.lg,
-  },
-  conversionHeader: {
-    alignItems: "center",
-    marginBottom: Spacing.lg,
-  },
-  conversionLabel: {
-    fontSize: 10,
-    fontWeight: "300",
-    color: Colors.dark.sage,
-    letterSpacing: 2,
-  },
-  conversionContent: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.sm,
+    marginBottom: Spacing.xl,
   },
-  conversionSide: {
+  headerLeft: {
     flex: 1,
-    alignItems: "center",
-    gap: Spacing.sm,
   },
-  conversionArrow: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "rgba(201, 169, 97, 0.1)",
-    justifyContent: "center",
-    alignItems: "center",
+  backText: {
+    fontSize: 16,
+    fontWeight: "400",
+    color: Colors.dark.text,
   },
-  conversionAmount: {
+  headerCenter: {
+    alignItems: "center",
+    flex: 2,
+  },
+  title: {
     fontSize: 18,
     fontWeight: "400",
-    color: Colors.dark.cream,
+    color: Colors.dark.text,
+    letterSpacing: 0.5,
   },
-  tokenAmount: {
-    color: Colors.dark.primary,
-  },
-  conversionType: {
+  subtitle: {
     fontSize: 11,
     fontWeight: "300",
-    color: Colors.dark.sage,
-  },
-  rateContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: Spacing.sm,
-    marginTop: Spacing.lg,
-    paddingTop: Spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: Colors.dark.cardBorderGlass,
-  },
-  rateText: {
-    fontSize: 12,
-    fontWeight: "300",
-    color: Colors.dark.sage,
-  },
-  progressCard: {
-    backgroundColor: Colors.dark.cardGlass,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.dark.primary,
-    padding: Spacing.lg,
-    alignItems: "center",
-  },
-  progressTitle: {
-    fontSize: 16,
-    fontWeight: "400",
-    color: Colors.dark.cream,
-    marginBottom: Spacing.lg,
-  },
-  progressBarContainer: {
-    width: "100%",
-    height: 8,
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
-    borderRadius: 4,
-    overflow: "hidden",
-  },
-  progressBarFill: {
-    height: "100%",
-    borderRadius: 4,
-  },
-  progressPercent: {
-    fontSize: 24,
-    fontWeight: "300",
-    color: Colors.dark.primary,
-    marginTop: Spacing.md,
-  },
-  progressSteps: {
-    width: "100%",
-    marginTop: Spacing.lg,
-    gap: Spacing.sm,
-  },
-  progressStep: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.sm,
-  },
-  progressStepDot: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    borderWidth: 1,
-    borderColor: Colors.dark.sage,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  progressStepDotComplete: {
-    backgroundColor: Colors.dark.successBright,
-    borderColor: Colors.dark.successBright,
-  },
-  progressStepDotActive: {
-    borderColor: Colors.dark.primary,
-    backgroundColor: "rgba(201, 169, 97, 0.2)",
-  },
-  progressStepLabel: {
-    fontSize: 12,
-    fontWeight: "300",
-    color: Colors.dark.sage,
-  },
-  progressStepLabelComplete: {
-    color: Colors.dark.successBright,
-  },
-  progressStepLabelActive: {
-    color: Colors.dark.primary,
-  },
-  completeCard: {
-    backgroundColor: "rgba(16, 185, 129, 0.05)",
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: "rgba(16, 185, 129, 0.3)",
-    padding: Spacing.xl,
-    alignItems: "center",
-  },
-  completeIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: "rgba(16, 185, 129, 0.15)",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: Spacing.md,
-  },
-  completeTitle: {
-    fontSize: 18,
-    fontWeight: "400",
-    color: Colors.dark.successBright,
-    marginBottom: Spacing.sm,
-  },
-  completeSubtitle: {
-    fontSize: 13,
-    fontWeight: "300",
-    color: Colors.dark.sage,
-    textAlign: "center",
-    lineHeight: 18,
-    marginBottom: Spacing.lg,
-  },
-  tokenStats: {
-    flexDirection: "row",
-    alignItems: "center",
-    width: "100%",
-  },
-  tokenStat: {
-    flex: 1,
-    alignItems: "center",
-  },
-  tokenStatValue: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: Colors.dark.cream,
-  },
-  tokenStatLabel: {
-    fontSize: 10,
-    fontWeight: "300",
-    color: Colors.dark.sage,
+    color: Colors.dark.textSecondary,
     marginTop: 2,
   },
-  tokenStatDivider: {
-    width: 1,
-    height: 30,
-    backgroundColor: Colors.dark.cardBorderGlass,
-  },
-  benefitsCard: {
-    backgroundColor: Colors.dark.cardGlass,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.dark.cardBorderGlass,
-    padding: Spacing.lg,
-  },
-  benefitsTitle: {
-    fontSize: 14,
-    fontWeight: "400",
-    color: Colors.dark.cream,
-    marginBottom: Spacing.md,
-  },
-  benefitsList: {
-    gap: Spacing.sm,
-  },
-  benefitItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.md,
-  },
-  benefitText: {
-    fontSize: 13,
-    fontWeight: "300",
-    color: Colors.dark.sage,
-  },
-  infoCard: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: Spacing.md,
-    backgroundColor: "rgba(201, 169, 97, 0.05)",
-    borderRadius: BorderRadius.sm,
-    padding: Spacing.md,
-    borderWidth: 1,
-    borderColor: "rgba(201, 169, 97, 0.2)",
-  },
-  infoText: {
+  headerRight: {
     flex: 1,
-    fontSize: 12,
-    fontWeight: "300",
-    color: Colors.dark.sage,
-    lineHeight: 18,
+    alignItems: "flex-end",
   },
-  spacer: {
-    flex: 1,
-    minHeight: Spacing.xl,
+  navigationContainer: {
+    paddingHorizontal: Spacing.lg,
+    marginBottom: Spacing.xl,
   },
-  successBanner: {
+  navigationPills: {
     flexDirection: "row",
-    alignItems: "center",
     justifyContent: "center",
     gap: Spacing.sm,
-    backgroundColor: "rgba(16, 185, 129, 0.1)",
-    paddingVertical: Spacing.lg,
-    paddingHorizontal: Spacing.xl,
-    borderRadius: BorderRadius.full,
+    marginBottom: Spacing.sm,
   },
-  successText: {
-    fontSize: 14,
-    fontWeight: "400",
-    color: Colors.dark.successBright,
+  navPill: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.full,
+    backgroundColor: "transparent",
+    borderWidth: 1,
+    borderColor: "rgba(168, 196, 181, 0.3)",
+  },
+  navPillActive: {
+    backgroundColor: "rgba(74, 222, 128, 0.15)",
+    borderColor: "rgba(74, 222, 128, 0.5)",
+  },
+  navPillText: {
+    fontSize: 11,
+    fontWeight: "300",
+    color: Colors.dark.text,
     letterSpacing: 0.3,
   },
-  tokenizeButtonContainer: {
-    width: "100%",
+  mainContent: {
+    paddingHorizontal: Spacing.lg,
+    gap: Spacing.lg,
   },
-  tokenizeButton: {
+  primaryButton: {
     borderRadius: BorderRadius.full,
-    paddingVertical: Spacing.lg,
+    overflow: "hidden",
+    shadowColor: "#4ade80",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  primaryButtonGradient: {
+    paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.xl,
-    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
+    borderRadius: BorderRadius.full,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.2)",
+  },
+  primaryButtonText: {
+    fontSize: 14,
+    fontWeight: "400",
+    color: Colors.dark.text,
+    letterSpacing: 0.5,
+  },
+  propertySection: {
+    gap: Spacing.xl,
+  },
+  propertyRow: {
+    flexDirection: "row",
+    gap: Spacing.md,
+  },
+  propertyColumn: {
+    flex: 1,
     gap: Spacing.sm,
   },
-  tokenizeButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#1a1a1a",
+  propertyLabel: {
+    fontSize: 10,
+    fontWeight: "300",
+    color: "#A8C4B5",
+    letterSpacing: 1,
+    textTransform: "uppercase",
+    textAlign: "center",
+  },
+  valuePillSecondary: {
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    borderRadius: BorderRadius.full,
+    backgroundColor: "rgba(74, 222, 128, 0.15)",
+    borderWidth: 1,
+    borderColor: "rgba(74, 222, 128, 0.2)",
+    shadowColor: "#ffffff",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 3,
+  },
+  valuePillGreen: {
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    borderRadius: BorderRadius.full,
+    backgroundColor: "rgba(20, 54, 30, 0.8)",
+    borderWidth: 1,
+    borderColor: "rgba(168, 196, 181, 0.3)",
+    shadowColor: "#00ff64",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.12,
+    shadowRadius: 20,
+    elevation: 3,
+  },
+  valuePillPurple: {
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.md,
+    borderRadius: BorderRadius.full,
+    backgroundColor: "rgba(20, 54, 30, 0.8)",
+    borderWidth: 1,
+    borderColor: "rgba(168, 196, 181, 0.3)",
+    shadowColor: "#c8b4ff",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 3,
+  },
+  valuePillCream: {
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.md,
+    borderRadius: BorderRadius.full,
+    backgroundColor: "rgba(20, 54, 30, 0.8)",
+    borderWidth: 1,
+    borderColor: "rgba(168, 196, 181, 0.3)",
+    shadowColor: "#fffaf0",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 3,
+  },
+  valuePillText: {
+    fontSize: 13,
+    fontWeight: "400",
+    color: "#E8D5B7",
     letterSpacing: 0.5,
+    textAlign: "center",
+  },
+  valuePillTextEmpty: {
+    fontSize: 13,
+    fontWeight: "400",
+    color: "#E8D5B7",
+    letterSpacing: 0.5,
+    textAlign: "center",
+  },
+  reverseSection: {
+    marginTop: Spacing.sm,
+  },
+  actionGrid: {
+    marginTop: Spacing.md,
+    gap: Spacing.md,
+  },
+  actionGridRow: {
+    flexDirection: "row",
+    gap: Spacing.md,
+  },
+  actionGridRowFull: {
+    flexDirection: "row",
+  },
+  actionButton: {
+    flex: 1,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    borderRadius: BorderRadius.full,
+    backgroundColor: "rgba(20, 54, 30, 0.8)",
+    borderWidth: 1,
+    borderColor: "rgba(168, 196, 181, 0.3)",
+    alignItems: "center",
+  },
+  actionButtonFullWidth: {
+    flex: 1,
+  },
+  actionButtonText: {
+    fontSize: 11,
+    fontWeight: "300",
+    color: Colors.dark.text,
+    letterSpacing: 0.3,
+  },
+  screenNavigation: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: Spacing.sm,
+    marginTop: Spacing["2xl"],
+    paddingVertical: Spacing.md,
+  },
+  navDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "rgba(168, 196, 181, 0.3)",
+  },
+  navDotActive: {
+    backgroundColor: "#4ade80",
+    shadowColor: "#4ade80",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 6,
+    elevation: 3,
   },
 });

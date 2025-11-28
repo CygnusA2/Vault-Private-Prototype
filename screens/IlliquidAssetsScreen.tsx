@@ -38,6 +38,14 @@ const ASSETS = [
 export default function IlliquidAssetsScreen() {
   const { setNeedsIlliquidAssets, setNeedsLedgerToken } = useAuth();
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setNeedsIlliquidAssets(false);
+      setNeedsLedgerToken(true);
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, []);
+
   const handleTransform = () => {
     setNeedsIlliquidAssets(false);
     setNeedsLedgerToken(true);

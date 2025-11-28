@@ -1,0 +1,135 @@
+// client/src/pages/LedgerToken.tsx
+
+import BankHeader from "@/components/BankHeader";
+import NavigationPills from "@/components/NavigationPills";
+import PrimaryActionButton from "@/components/PrimaryActionButton";
+import PropertyValueCard from "@/components/PropertyValueCard";
+import ActionButtonGrid from "@/components/ActionButtonGrid";
+import ScreenNavigation from "@/components/ScreenNavigation";
+import DownloadButton from "@/components/DownloadButton";
+
+export default function LedgerToken() {
+  const navigationPills = [
+    { id: 'full-wallet', label: 'Full Wallet' },
+    { id: 'optimus', label: 'Optimus' },
+    { id: 'risk-metrics', label: 'Risk Metrics' },
+    { id: 'blocks', label: 'Blocks' },
+    { id: 'card-m', label: 'Card M' },
+    { id: 'sentinel-transfer', label: 'Sentinel' },
+  ];
+
+  const actionButtons = [
+    { id: 'partially', label: 'Partially' },
+    { id: 'entire-amount', label: 'Entire Amount' },
+    { id: 'bank-account', label: 'Bank Account' },
+    { id: 'savings', label: 'Savings' },
+    { id: 'debit-credit-card', label: 'Debit/Credit Card' },
+    { id: 'invest', label: 'Invest' },
+    { id: 'transfer', label: 'Transfer', fullWidth: true },
+  ];
+
+  return (
+    <div className="min-h-screen bg-background flex flex-col max-w-md mx-auto">
+      <BankHeader
+        title="Ledger Token"
+        subtitle="Powered by Peter"
+        onBack={() => console.log('Back clicked')}
+        onProfile={() => console.log('Profile clicked')}
+      />
+
+      <div className="flex-1 overflow-y-auto pb-6">
+        {/* Navigation Pills */}
+        <div className="px-6 pt-4">
+          <NavigationPills currentScreen="ledger" />
+        </div>
+
+        <div className="px-6 py-6 space-y-6">
+          <PrimaryActionButton onClick={() => console.log('Transform clicked')}>
+            Transform
+          </PrimaryActionButton>
+
+          <div className="space-y-8">
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <label className="text-xs text-center uppercase" style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.08em', fontWeight: 300, color: '#A8C4B5' }}>
+                  Property 1 Value
+                </label>
+                <label className="text-xs text-center uppercase" style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.08em', fontWeight: 300, color: '#A8C4B5' }}>
+                  Transformed Value
+                </label>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="px-4 py-2 rounded-full text-center text-sm border backdrop-blur-sm bg-secondary/90 border-secondary/20" style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.05em', fontWeight: 400, color: '#E8D5B7', boxShadow: '0 0 20px rgba(255, 255, 255, 0.15)' }}>
+                  £ 5,000.000
+                </div>
+                <div className="px-4 py-2 rounded-full text-center text-sm border backdrop-blur-sm bg-card/80 border-card-border" style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.05em', fontWeight: 400, color: '#E8D5B7', boxShadow: '0 0 20px rgba(0, 255, 100, 0.12)' }}>
+                  CST 3,000
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <label className="text-xs text-center uppercase" style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.08em', fontWeight: 300, color: '#A8C4B5' }}>
+                  Property 2 Value
+                </label>
+                <label className="text-xs text-center uppercase" style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.08em', fontWeight: 300, color: '#A8C4B5' }}>
+                  Transformed Value
+                </label>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="px-4 py-2 rounded-full text-center text-sm border backdrop-blur-sm bg-secondary/90 border-secondary/20" style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.05em', fontWeight: 400, color: '#E8D5B7', boxShadow: '0 0 20px rgba(255, 255, 255, 0.15)' }}>
+                  £ 2,000.000
+                </div>
+                <div className="px-4 py-2 rounded-full text-center text-sm border backdrop-blur-sm bg-card/80 border-card-border" style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.05em', fontWeight: 400, color: '#E8D5B7', boxShadow: '0 0 20px rgba(0, 255, 100, 0.12)' }}>
+                  CST 150,000
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-4">
+            <PrimaryActionButton onClick={() => console.log('Reverse clicked')}>
+              Reverse
+            </PrimaryActionButton>
+          </div>
+
+          <div className="pt-1 grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-xs text-center block uppercase" style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.08em', fontWeight: 300, color: '#A8C4B5' }}>
+                Property Value
+              </label>
+              <div className="px-4 py-4 rounded-full text-center text-sm border backdrop-blur-sm bg-card/80 border-card-border" style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.05em', fontWeight: 400, color: '#E8D5B7', boxShadow: '0 0 20px rgba(200, 180, 255, 0.3), 0 0 40px rgba(180, 160, 230, 0.2)' }}>
+                
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs text-center block uppercase" style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.08em', fontWeight: 300, color: '#A8C4B5' }}>
+                Reversed Value
+              </label>
+              <div className="px-4 py-4 rounded-full text-center text-sm border backdrop-blur-sm bg-card/80 border-card-border" style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.05em', fontWeight: 400, color: '#E8D5B7', boxShadow: '0 0 20px rgba(255, 250, 240, 0.3), 0 0 40px rgba(240, 234, 214, 0.2)' }}>
+                
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-4">
+            <PrimaryActionButton onClick={() => console.log('Convert clicked')}>
+              Convert into Cash
+            </PrimaryActionButton>
+          </div>
+
+          <div className="pt-2">
+            <ActionButtonGrid
+              buttons={actionButtons}
+              onButtonClick={(id) => console.log('Action clicked:', id)}
+            />
+          </div>
+        </div>
+      </div>
+      
+      <ScreenNavigation />
+      <DownloadButton screenName="ledger-token" />
+    </div>
+  );
+}
