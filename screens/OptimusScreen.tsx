@@ -40,7 +40,11 @@ const MARKET_DATA = [
 ];
 
 export default function OptimusScreen() {
-  const { setNeedsOptimus } = useAuth();
+  const { setNeedsOptimus, convertedAmounts } = useAuth();
+
+  const formatNumber = (num: number): string => {
+    return num.toLocaleString("en-GB");
+  };
 
   const handleDashboardNavigation = () => {
     setNeedsOptimus(false);
@@ -89,17 +93,18 @@ export default function OptimusScreen() {
         <Animated.View entering={FadeInDown.duration(400).delay(200)} style={styles.monetarySection}>
           <View style={styles.monetaryRow}>
             <View style={styles.monetaryPill}>
-              <ThemedText style={styles.monetaryText}>CST 3,000</ThemedText>
-            </View>
-            <View style={styles.monetaryEmpty} />
-          </View>
-          
-          <View style={styles.monetaryRow}>
-            <View style={styles.monetaryPill}>
-              <ThemedText style={styles.monetaryText}>CST 150,000</ThemedText>
+              <ThemedText style={styles.monetaryText}>
+                {convertedAmounts.remainingAmount > 0 
+                  ? `CST ${formatNumber(convertedAmounts.remainingAmount)}`
+                  : "CST 0"}
+              </ThemedText>
             </View>
             <View style={[styles.monetaryPill, styles.monetaryPillBlue]}>
-              <ThemedText style={styles.monetaryText}>£ 150,000</ThemedText>
+              <ThemedText style={styles.monetaryText}>
+                {convertedAmounts.convertedCash > 0 
+                  ? `£ ${formatNumber(convertedAmounts.convertedCash)}`
+                  : "£ 0"}
+              </ThemedText>
             </View>
           </View>
 

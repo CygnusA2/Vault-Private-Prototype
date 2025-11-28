@@ -20,6 +20,11 @@ interface UserData {
   email: string;
 }
 
+interface ConvertedAmounts {
+  convertedCash: number;
+  remainingAmount: number;
+}
+
 interface AuthContextType {
   isAuthenticated: boolean;
   isReturningUser: boolean;
@@ -28,6 +33,7 @@ interface AuthContextType {
   needsLedgerToken: boolean;
   needsOptimus: boolean;
   userData: UserData | null;
+  convertedAmounts: ConvertedAmounts;
   login: () => void;
   logout: () => void;
   setUserData: (data: Partial<UserData>) => void;
@@ -38,6 +44,7 @@ interface AuthContextType {
   setNeedsIlliquidAssets: (value: boolean) => void;
   setNeedsLedgerToken: (value: boolean) => void;
   setNeedsOptimus: (value: boolean) => void;
+  setConvertedAmounts: (amounts: ConvertedAmounts) => void;
   completeOptimus: () => void;
 }
 
@@ -71,6 +78,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [needsLedgerToken, setNeedsLedgerTokenState] = useState(false);
   const [needsOptimus, setNeedsOptimusState] = useState(false);
   const [userData, setUserDataState] = useState<UserData>(defaultUserData);
+  const [convertedAmounts, setConvertedAmountsState] = useState<ConvertedAmounts>({
+    convertedCash: 0,
+    remainingAmount: 0,
+  });
 
   const login = () => {
     setIsAuthenticated(true);
@@ -117,6 +128,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setNeedsOptimusState(value);
   };
 
+  const setConvertedAmounts = (amounts: ConvertedAmounts) => {
+    setConvertedAmountsState(amounts);
+  };
+
   const completeOptimus = () => {
     setNeedsOptimusState(false);
   };
@@ -154,6 +169,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         needsLedgerToken,
         needsOptimus,
         userData,
+        convertedAmounts,
         login,
         logout,
         setUserData,
@@ -164,6 +180,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setNeedsIlliquidAssets,
         setNeedsLedgerToken,
         setNeedsOptimus,
+        setConvertedAmounts,
         completeOptimus,
       }}
     >

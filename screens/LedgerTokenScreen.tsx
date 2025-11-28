@@ -42,12 +42,14 @@ const INITIAL_PROPERTY1 = 5000000;
 const INITIAL_PROPERTY2 = 2000000;
 
 export default function LedgerTokenScreen() {
-  const { setNeedsLedgerToken, setNeedsOptimus } = useAuth();
+  const { setNeedsLedgerToken, setNeedsOptimus, setConvertedAmounts } = useAuth();
   
   const [property1Value, setProperty1Value] = useState(INITIAL_PROPERTY1);
   const [property2Value, setProperty2Value] = useState(INITIAL_PROPERTY2);
   const [transformed1, setTransformed1] = useState("");
   const [transformed2, setTransformed2] = useState("");
+  const [transformed1Raw, setTransformed1Raw] = useState(0);
+  const [transformed2Raw, setTransformed2Raw] = useState(0);
   const [reversedValue, setReversedValue] = useState("");
   const [propertyReverse, setPropertyReverse] = useState("");
   
@@ -87,20 +89,20 @@ export default function LedgerTokenScreen() {
     const numericText = text.replace(/[^0-9]/g, "");
     const numValue = parseInt(numericText) || 0;
     
-    if (numValue <= INITIAL_PROPERTY1) {
-      setTransformed1(numericText ? formatNumber(numValue) : "");
-      setProperty1Value(INITIAL_PROPERTY1 - numValue);
-    }
+    const cappedValue = Math.min(numValue, INITIAL_PROPERTY1);
+    setTransformed1(numericText ? formatNumber(cappedValue) : "");
+    setTransformed1Raw(cappedValue);
+    setProperty1Value(INITIAL_PROPERTY1 - cappedValue);
   };
 
   const handleTransformed2Change = (text: string) => {
     const numericText = text.replace(/[^0-9]/g, "");
     const numValue = parseInt(numericText) || 0;
     
-    if (numValue <= INITIAL_PROPERTY2) {
-      setTransformed2(numericText ? formatNumber(numValue) : "");
-      setProperty2Value(INITIAL_PROPERTY2 - numValue);
-    }
+    const cappedValue = Math.min(numValue, INITIAL_PROPERTY2);
+    setTransformed2(numericText ? formatNumber(cappedValue) : "");
+    setTransformed2Raw(cappedValue);
+    setProperty2Value(INITIAL_PROPERTY2 - cappedValue);
   };
 
   const formatNumber = (num: number): string => {
@@ -112,23 +114,36 @@ export default function LedgerTokenScreen() {
   };
 
   const handleConvertAction = (type: "partially" | "entire") => {
-    const t1Num = parseFloat(transformed1.replace(/,/g, "")) || 0;
-    const t2Num = parseFloat(transformed2.replace(/,/g, "")) || 0;
+    const remainingProperty = property1Value + property2Value;
+    const totalInitial = INITIAL_PROPERTY1 + INITIAL_PROPERTY2;
+    const convertedAmount = totalInitial - remainingProperty;
     
     if (type === "entire") {
+      setConvertedAmounts({
+        convertedCash: convertedAmount,
+        remainingAmount: remainingProperty,
+      });
       setTransformed1("");
       setTransformed2("");
-      setReversedValue(formatNumber(t1Num + t2Num));
+      setTransformed1Raw(0);
+      setTransformed2Raw(0);
     } else {
-      const partialAmount = Math.floor((t1Num + t2Num) / 2);
-      const remaining = (t1Num + t2Num) - partialAmount;
-      setReversedValue(formatNumber(partialAmount));
-      if (remaining > 0) {
-        setTransformed1(formatNumber(remaining));
+      const partialAmount = Math.floor(convertedAmount / 2);
+      const partialRemaining = convertedAmount - partialAmount;
+      setConvertedAmounts({
+        convertedCash: partialAmount,
+        remainingAmount: remainingProperty + partialRemaining,
+      });
+      if (partialRemaining > 0) {
+        setTransformed1(formatNumber(partialRemaining));
+        setTransformed1Raw(partialRemaining);
+        setProperty1Value(property1Value);
       } else {
         setTransformed1("");
+        setTransformed1Raw(0);
       }
       setTransformed2("");
+      setTransformed2Raw(0);
     }
     
     setShowConvertHighlight(false);
