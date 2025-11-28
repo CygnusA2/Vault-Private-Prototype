@@ -30,6 +30,13 @@ const IRIS_SCAN_DURATION = 800;
 const IRIS_HEIGHT = 120;
 const SCAN_LINE_HEIGHT = 3;
 
+const FINGERPRINT_FINGERS = [
+  { id: "rightIndex", name: "Right Index", scansRequired: 4 },
+  { id: "leftIndex", name: "Left Index", scansRequired: 4 },
+  { id: "rightThumb", name: "Right Thumb", scansRequired: 4 },
+  { id: "leftThumb", name: "Left Thumb", scansRequired: 4 },
+];
+
 export default function KYCBiometricScreen({ navigation }: KYCBiometricScreenProps) {
   const { setUserData } = useAuth();
   const [fingerprintEnabled, setFingerprintEnabled] = useState(false);
@@ -44,12 +51,28 @@ export default function KYCBiometricScreen({ navigation }: KYCBiometricScreenPro
   const [lsegEnabled, setLsegEnabled] = useState(false);
   const [lsegChecked, setLsegChecked] = useState(false);
   const [lsegChecking, setLsegChecking] = useState(false);
+  
+  const [currentFingerIndex, setCurrentFingerIndex] = useState(0);
+  const [fingerScans, setFingerScans] = useState<{ [key: string]: number }>({
+    rightIndex: 0,
+    leftIndex: 0,
+    rightThumb: 0,
+    leftThumb: 0,
+  });
+  const [isScanning, setIsScanning] = useState(false);
+  
   const buttonScale = useSharedValue(1);
   const lsegPulseAnim = useSharedValue(1);
   const pulseAnim = useSharedValue(1);
+  const fingerprintScale = useSharedValue(1);
+  const fingerprintGlow = useSharedValue(0);
   const irisScanLinePosition = useSharedValue(0);
   const irisScanLineOpacity = useSharedValue(0);
   const irisFrameGlow = useSharedValue(0);
+
+  const currentFinger = FINGERPRINT_FINGERS[currentFingerIndex];
+  const totalScansCompleted = Object.values(fingerScans).reduce((a, b) => a + b, 0);
+  const totalScansRequired = FINGERPRINT_FINGERS.reduce((a, b) => a + b.scansRequired, 0);
 
   useEffect(() => {
     if (dowJonesChecking) {
@@ -149,13 +172,57 @@ export default function KYCBiometricScreen({ navigation }: KYCBiometricScreenPro
     shadowOpacity: irisFrameGlow.value * 0.8,
   }));
 
+  const fingerprintAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: fingerprintScale.value }],
+    shadowOpacity: fingerprintGlow.value,
+  }));
+
   const handleFingerprintToggle = (value: boolean) => {
     setFingerprintEnabled(value);
-    if (value) {
-      setTimeout(() => setFingerprintEnrolled(true), 1000);
-    } else {
+    if (!value) {
       setFingerprintEnrolled(false);
+      setCurrentFingerIndex(0);
+      setFingerScans({
+        rightIndex: 0,
+        leftIndex: 0,
+        rightThumb: 0,
+        leftThumb: 0,
+      });
     }
+  };
+
+  const handleFingerprintTap = () => {
+    if (isScanning || fingerprintEnrolled || !fingerprintEnabled) return;
+    
+    setIsScanning(true);
+    
+    fingerprintScale.value = withSequence(
+      withTiming(0.9, { duration: 100 }),
+      withSpring(1.05, { damping: 8 }),
+      withSpring(1, { damping: 12 })
+    );
+    
+    fingerprintGlow.value = withSequence(
+      withTiming(0.8, { duration: 100 }),
+      withTiming(0, { duration: 400 })
+    );
+    
+    setTimeout(() => {
+      const newScans = { ...fingerScans };
+      const fingerId = currentFinger.id;
+      newScans[fingerId] = (newScans[fingerId] || 0) + 1;
+      setFingerScans(newScans);
+      
+      if (newScans[fingerId] >= currentFinger.scansRequired) {
+        if (currentFingerIndex < FINGERPRINT_FINGERS.length - 1) {
+          setCurrentFingerIndex(currentFingerIndex + 1);
+        } else {
+          setFingerprintEnrolled(true);
+        }
+      }
+      
+      setIsScanning(false);
+    }, 300);
   };
 
   const handleIrisToggle = (value: boolean) => {
@@ -249,8 +316,10 @@ export default function KYCBiometricScreen({ navigation }: KYCBiometricScreenPro
                 style={{ color: Colors.dark.textSecondary }}
               >
                 {fingerprintEnrolled
-                  ? "Enrolled successfully"
-                  : "Use your fingerprint to sign in"}
+                  ? "All fingerprints enrolled"
+                  : fingerprintEnabled
+                  ? `Scanning: ${currentFinger.name}`
+                  : "Tap to enroll your fingerprints"}
               </ThemedText>
             </View>
             <Switch
@@ -263,18 +332,91 @@ export default function KYCBiometricScreen({ navigation }: KYCBiometricScreenPro
               thumbColor={Colors.dark.text}
             />
           </View>
+          
           {fingerprintEnabled && !fingerprintEnrolled ? (
-            <View style={styles.enrollingContainer}>
-              <Feather
-                name="loader"
-                size={20}
-                color={Colors.dark.primary}
-              />
-              <ThemedText
-                type="small"
-                style={{ color: Colors.dark.primary }}
-              >
-                Enrolling fingerprint...
+            <View style={styles.fingerprintScanSection}>
+              <View style={styles.fingerprintRequirements}>
+                <ThemedText type="small" style={styles.requirementsTitle}>
+                  ENROLLMENT REQUIREMENTS
+                </ThemedText>
+                <View style={styles.requirementsTable}>
+                  {FINGERPRINT_FINGERS.map((finger) => (
+                    <View key={finger.id} style={styles.requirementRow}>
+                      <View style={styles.requirementFinger}>
+                        <Feather 
+                          name={fingerScans[finger.id] >= finger.scansRequired ? "check-circle" : "circle"} 
+                          size={14} 
+                          color={fingerScans[finger.id] >= finger.scansRequired ? Colors.dark.success : Colors.dark.textTertiary} 
+                        />
+                        <ThemedText 
+                          type="small" 
+                          style={[
+                            styles.requirementText,
+                            finger.id === currentFinger.id && styles.requirementTextActive,
+                            fingerScans[finger.id] >= finger.scansRequired && styles.requirementTextComplete,
+                          ]}
+                        >
+                          {finger.name}
+                        </ThemedText>
+                      </View>
+                      <ThemedText 
+                        type="small" 
+                        style={[
+                          styles.requirementCount,
+                          fingerScans[finger.id] >= finger.scansRequired && styles.requirementCountComplete,
+                        ]}
+                      >
+                        {fingerScans[finger.id]}/{finger.scansRequired}
+                      </ThemedText>
+                    </View>
+                  ))}
+                </View>
+              </View>
+              
+              <Pressable onPress={handleFingerprintTap} disabled={isScanning}>
+                <Animated.View 
+                  style={[
+                    styles.fingerprintScanArea,
+                    fingerprintAnimStyle,
+                  ]}
+                >
+                  <View style={styles.fingerprintIcon}>
+                    <Feather 
+                      name="target" 
+                      size={60} 
+                      color={isScanning ? Colors.dark.success : Colors.dark.primary} 
+                    />
+                  </View>
+                  <ThemedText type="small" style={styles.fingerprintInstructions}>
+                    {isScanning ? "Scanning..." : `Touch here with your ${currentFinger.name}`}
+                  </ThemedText>
+                  <ThemedText type="small" style={styles.fingerprintProgress}>
+                    Scan {fingerScans[currentFinger.id] + 1} of {currentFinger.scansRequired}
+                  </ThemedText>
+                </Animated.View>
+              </Pressable>
+              
+              <View style={styles.totalProgressContainer}>
+                <View style={styles.totalProgressBar}>
+                  <View 
+                    style={[
+                      styles.totalProgressFill, 
+                      { width: `${(totalScansCompleted / totalScansRequired) * 100}%` }
+                    ]} 
+                  />
+                </View>
+                <ThemedText type="small" style={styles.totalProgressText}>
+                  Total: {totalScansCompleted} / {totalScansRequired} scans
+                </ThemedText>
+              </View>
+            </View>
+          ) : null}
+          
+          {fingerprintEnrolled ? (
+            <View style={styles.enrolledSuccessContainer}>
+              <Feather name="check-circle" size={18} color={Colors.dark.success} />
+              <ThemedText type="small" style={{ color: Colors.dark.success }}>
+                All 4 fingerprints enrolled ({totalScansRequired} scans completed)
               </ThemedText>
             </View>
           ) : null}
@@ -628,6 +770,100 @@ const styles = StyleSheet.create({
   biometricTitle: {
     marginBottom: Spacing.xs,
     color: Colors.dark.text,
+  },
+  fingerprintScanSection: {
+    marginTop: Spacing.lg,
+    paddingTop: Spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: Colors.dark.border,
+    gap: Spacing.lg,
+  },
+  fingerprintRequirements: {
+    gap: Spacing.md,
+  },
+  requirementsTitle: {
+    color: Colors.dark.textTertiary,
+    letterSpacing: 1.5,
+    fontSize: 10,
+    fontWeight: "600",
+  },
+  requirementsTable: {
+    gap: Spacing.sm,
+  },
+  requirementRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: Spacing.xs,
+    paddingHorizontal: Spacing.sm,
+    borderRadius: BorderRadius.xs,
+    backgroundColor: Colors.dark.backgroundSecondary,
+  },
+  requirementFinger: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+  },
+  requirementText: {
+    color: Colors.dark.textSecondary,
+  },
+  requirementTextActive: {
+    color: Colors.dark.primary,
+    fontWeight: "600",
+  },
+  requirementTextComplete: {
+    color: Colors.dark.success,
+  },
+  requirementCount: {
+    color: Colors.dark.textTertiary,
+    fontFamily: "monospace",
+  },
+  requirementCountComplete: {
+    color: Colors.dark.success,
+  },
+  fingerprintScanArea: {
+    alignItems: "center",
+    justifyContent: "center",
+    padding: Spacing.xl,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 2,
+    borderColor: Colors.dark.primary,
+    borderStyle: "dashed",
+    backgroundColor: "rgba(201, 169, 97, 0.05)",
+    shadowColor: Colors.dark.primary,
+    shadowOffset: { width: 0, height: 0 },
+    shadowRadius: 20,
+    elevation: 8,
+  },
+  fingerprintIcon: {
+    marginBottom: Spacing.md,
+  },
+  fingerprintInstructions: {
+    color: Colors.dark.text,
+    textAlign: "center",
+    marginBottom: Spacing.xs,
+  },
+  fingerprintProgress: {
+    color: Colors.dark.textTertiary,
+    textAlign: "center",
+  },
+  totalProgressContainer: {
+    gap: Spacing.sm,
+  },
+  totalProgressBar: {
+    height: 6,
+    backgroundColor: Colors.dark.backgroundSecondary,
+    borderRadius: 3,
+    overflow: "hidden",
+  },
+  totalProgressFill: {
+    height: "100%",
+    backgroundColor: Colors.dark.success,
+    borderRadius: 3,
+  },
+  totalProgressText: {
+    color: Colors.dark.textSecondary,
+    textAlign: "center",
   },
   enrollingContainer: {
     flexDirection: "row",
