@@ -11,9 +11,10 @@ import Animated, {
   FadeInDown,
   FadeIn,
 } from "react-native-reanimated";
-import { ScreenScrollView } from "@/components/ScreenScrollView";
+import { AuthScreenScrollView } from "@/components/AuthScreenScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { Colors, Spacing, BorderRadius } from "@/constants/theme";
+import { useAuth } from "@/context/AuthContext";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -25,6 +26,7 @@ const REQUIRED_DOCS = [
 ];
 
 export default function PreApproveScreen() {
+  const { completePreApprove } = useAuth();
   const [uploadedDocs, setUploadedDocs] = useState<string[]>([]);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -88,7 +90,7 @@ export default function PreApproveScreen() {
   };
 
   return (
-    <ScreenScrollView contentContainerStyle={styles.scrollContent}>
+    <AuthScreenScrollView contentContainerStyle={styles.scrollContent}>
       <Animated.View
         entering={FadeInDown.duration(500).delay(100)}
         style={styles.headerSection}
@@ -180,6 +182,8 @@ export default function PreApproveScreen() {
             </ThemedText>
           ) : null}
         </View>
+
+        <ContinueButton onPress={completePreApprove} />
       </Animated.View>
 
       <Modal
@@ -233,7 +237,7 @@ export default function PreApproveScreen() {
           </Animated.View>
         </View>
       </Modal>
-    </ScreenScrollView>
+    </AuthScreenScrollView>
   );
 }
 
@@ -262,6 +266,37 @@ function UploadButton({ onPress }: { onPress: () => void }) {
         style={styles.uploadButton}
       >
         <ThemedText style={styles.uploadButtonText}>Upload document</ThemedText>
+      </LinearGradient>
+    </AnimatedPressable>
+  );
+}
+
+function ContinueButton({ onPress }: { onPress: () => void }) {
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <AnimatedPressable
+      onPressIn={() => {
+        scale.value = withSpring(0.97);
+      }}
+      onPressOut={() => {
+        scale.value = withSpring(1);
+      }}
+      onPress={onPress}
+      style={[styles.continueButtonContainer, animatedStyle]}
+    >
+      <LinearGradient
+        colors={[Colors.dark.primary, "#D4B872", "#E5C88A"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.continueButton}
+      >
+        <ThemedText style={styles.continueButtonText}>Continue to Dashboard</ThemedText>
+        <Feather name="arrow-right" size={18} color="#1a1a1a" />
       </LinearGradient>
     </AnimatedPressable>
   );
@@ -383,6 +418,25 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "400",
     color: "#E5E4E2",
+    letterSpacing: 0.5,
+  },
+  continueButtonContainer: {
+    width: "100%",
+    marginTop: Spacing.md,
+  },
+  continueButton: {
+    borderRadius: BorderRadius.full,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.sm,
+  },
+  continueButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#1a1a1a",
     letterSpacing: 0.5,
   },
   sectionLabel: {

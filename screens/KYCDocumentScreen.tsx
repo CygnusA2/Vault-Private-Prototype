@@ -47,10 +47,8 @@ export default function KYCDocumentScreen({ navigation }: KYCDocumentScreenProps
   };
 
   const handleContinue = () => {
-    if (isValid) {
-      setUserData({ documentType: selectedType, documentUploaded: true });
-      navigation.navigate("KYCSelfie");
-    }
+    setUserData({ documentType: selectedType || "passport", documentUploaded: true });
+    navigation.navigate("KYCSelfie");
   };
 
   return (
@@ -156,18 +154,13 @@ export default function KYCDocumentScreen({ navigation }: KYCDocumentScreenProps
       <Animated.View entering={FadeInDown.duration(600).delay(300)}>
         <AnimatedPressable
           onPress={handleContinue}
-          disabled={!isValid}
           onPressIn={() => {
             buttonScale.value = withSpring(0.97);
           }}
           onPressOut={() => {
             buttonScale.value = withSpring(1);
           }}
-          style={[
-            styles.continueButton,
-            !isValid && styles.continueButtonDisabled,
-            buttonAnimatedStyle,
-          ]}
+          style={[styles.continueButton, buttonAnimatedStyle]}
         >
           <ThemedText
             type="h4"

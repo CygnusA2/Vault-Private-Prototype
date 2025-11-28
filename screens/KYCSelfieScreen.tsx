@@ -64,10 +64,8 @@ export default function KYCSelfieScreen({ navigation }: KYCSelfieScreenProps) {
   };
 
   const handleContinue = () => {
-    if (isCaptured) {
-      setUserData({ selfieUploaded: true });
-      navigation.navigate("KYCBiometric");
-    }
+    setUserData({ selfieUploaded: true });
+    navigation.navigate("KYCBiometric");
   };
 
   return (
@@ -148,18 +146,13 @@ export default function KYCSelfieScreen({ navigation }: KYCSelfieScreenProps) {
       <Animated.View entering={FadeInDown.duration(600).delay(300)}>
         <AnimatedPressable
           onPress={handleContinue}
-          disabled={!isCaptured}
           onPressIn={() => {
             buttonScale.value = withSpring(0.97);
           }}
           onPressOut={() => {
             buttonScale.value = withSpring(1);
           }}
-          style={[
-            styles.continueButton,
-            !isCaptured && styles.continueButtonDisabled,
-            buttonAnimatedStyle,
-          ]}
+          style={[styles.continueButton, buttonAnimatedStyle]}
         >
           <ThemedText
             type="h4"

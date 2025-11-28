@@ -13,6 +13,9 @@ A proof-of-concept mobile app prototype for a proprietary authenticator and priv
 - Biometric enrollment simulation (fingerprint, iris)
 - Face recognition login simulation with 2FA auto-fill
 - Dashboard with mock account data
+- **Pre-Approve screen added** - Now appears immediately after sign-in (both new users and returning users) before Dashboard
+- KYC screens simplified for demo - Continue buttons work without requiring all steps
+- Theme extended with cream (#E8D5B7) and sage (#A8C4B5) accent colors for Pre-Approve
 
 ## Project Architecture
 
@@ -74,11 +77,14 @@ A proof-of-concept mobile app prototype for a proprietary authenticator and priv
 3. SMS verification (demo: use 123456)
 4. 5-step KYC: Name → Document → Selfie → Biometrics → Address
 5. Automatic location detection for address auto-fill
+6. **Pre-Approve screen** with document upload simulation
+7. Continue to Dashboard
 
 ### Returning User Login
 1. Face recognition simulation
 2. Automatic 2FA code delivery and auto-fill
-3. Seamless transition to dashboard
+3. **Pre-Approve screen** (same as new users)
+4. Seamless transition to dashboard
 
 ### Main App
 - **Home Tab**: Welcome card, balance, quick actions, transactions

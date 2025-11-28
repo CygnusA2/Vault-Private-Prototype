@@ -50,12 +50,15 @@ export default function KYCAddressScreen({ navigation }: KYCAddressScreenProps) 
     street.length > 0 && city.length > 0 && country.length > 0 && postalCode.length > 0;
 
   const handleComplete = () => {
-    if (isValid) {
-      setUserData({
-        address: { street, city, country, postalCode },
-      });
-      completeOnboarding();
-    }
+    setUserData({
+      address: { 
+        street: street || "123 Park Avenue", 
+        city: city || "New York", 
+        country: country || "United States", 
+        postalCode: postalCode || "10022" 
+      },
+    });
+    completeOnboarding();
   };
 
   return (
@@ -161,18 +164,13 @@ export default function KYCAddressScreen({ navigation }: KYCAddressScreenProps) 
       <Animated.View entering={FadeInDown.duration(600).delay(300)}>
         <AnimatedPressable
           onPress={handleComplete}
-          disabled={!isValid || isDetecting}
           onPressIn={() => {
             buttonScale.value = withSpring(0.97);
           }}
           onPressOut={() => {
             buttonScale.value = withSpring(1);
           }}
-          style={[
-            styles.continueButton,
-            (!isValid || isDetecting) && styles.continueButtonDisabled,
-            buttonAnimatedStyle,
-          ]}
+          style={[styles.continueButton, buttonAnimatedStyle]}
         >
           <ThemedText
             type="h4"

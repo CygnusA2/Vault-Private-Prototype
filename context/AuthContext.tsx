@@ -21,12 +21,14 @@ interface UserData {
 interface AuthContextType {
   isAuthenticated: boolean;
   isReturningUser: boolean;
+  needsPreApprove: boolean;
   userData: UserData | null;
   login: () => void;
   logout: () => void;
   setUserData: (data: Partial<UserData>) => void;
   completeOnboarding: () => void;
   simulateReturningUser: () => void;
+  completePreApprove: () => void;
 }
 
 const defaultUserData: UserData = {
@@ -52,15 +54,18 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isReturningUser, setIsReturningUser] = useState(false);
+  const [needsPreApprove, setNeedsPreApprove] = useState(false);
   const [userData, setUserDataState] = useState<UserData>(defaultUserData);
 
   const login = () => {
     setIsAuthenticated(true);
+    setNeedsPreApprove(true);
   };
 
   const logout = () => {
     setIsAuthenticated(false);
     setIsReturningUser(false);
+    setNeedsPreApprove(false);
     setUserDataState(defaultUserData);
   };
 
@@ -71,6 +76,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const completeOnboarding = () => {
     setIsReturningUser(true);
     setIsAuthenticated(true);
+    setNeedsPreApprove(true);
+  };
+
+  const completePreApprove = () => {
+    setNeedsPreApprove(false);
   };
 
   const simulateReturningUser = () => {
@@ -99,12 +109,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         isAuthenticated,
         isReturningUser,
+        needsPreApprove,
         userData,
         login,
         logout,
         setUserData,
         completeOnboarding,
         simulateReturningUser,
+        completePreApprove,
       }}
     >
       {children}
