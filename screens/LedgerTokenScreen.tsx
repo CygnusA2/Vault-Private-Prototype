@@ -177,7 +177,6 @@ export default function LedgerTokenScreen() {
         </View>
         <View style={styles.headerCenter}>
           <ThemedText style={styles.title}>Ledger Token</ThemedText>
-          <ThemedText style={styles.subtitle}>Powered by Peter</ThemedText>
         </View>
         <View style={styles.headerRight}>
           <Feather name="battery" size={18} color={Colors.dark.text} />
@@ -455,12 +454,6 @@ const styles = StyleSheet.create({
     fontWeight: "400",
     color: Colors.dark.text,
     letterSpacing: 0.5,
-  },
-  subtitle: {
-    fontSize: 11,
-    fontWeight: "300",
-    color: Colors.dark.textSecondary,
-    marginTop: 2,
   },
   headerRight: {
     flex: 1,
