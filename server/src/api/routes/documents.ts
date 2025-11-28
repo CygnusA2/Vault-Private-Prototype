@@ -2,7 +2,7 @@ import { Router, Response } from 'express';
 import { z } from 'zod';
 import { authMiddleware, AuthenticatedRequest } from '../../core/middleware/auth';
 import { logger } from '../../core/logger';
-import { docusignService } from '../../modules/docusign';
+import { docusignService } from '../../modules/docusign/index';
 
 const router = Router();
 
@@ -12,7 +12,7 @@ const createEnvelopeSchema = z.object({
   documentType: z.enum(['kyc', 'loan_agreement', 'asset_transfer', 'tokenization_consent']),
   signerEmail: z.string().email(),
   signerName: z.string().min(1),
-  documentData: z.record(z.unknown()).optional(),
+  documentData: z.record(z.string(), z.unknown()).optional(),
 });
 
 const webhookSchema = z.object({
@@ -41,7 +41,7 @@ router.post('/sign', async (req: AuthenticatedRequest, res: Response) => {
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      res.status(400).json({ error: 'Invalid input', details: error.errors });
+      res.status(400).json({ error: 'Invalid input', details: error.issues });
       return;
     }
     logger.error('Document signing failed', { error: (error as Error).message, userId: req.user?.id });

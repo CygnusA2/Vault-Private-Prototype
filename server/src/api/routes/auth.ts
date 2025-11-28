@@ -44,7 +44,7 @@ router.post('/session', async (req: Request, res: Response) => {
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      res.status(400).json({ error: 'Invalid input', details: error.errors });
+      res.status(400).json({ error: 'Invalid input', details: error.issues });
       return;
     }
     logger.error('Session creation failed', { error: (error as Error).message });
@@ -54,7 +54,7 @@ router.post('/session', async (req: Request, res: Response) => {
 
 router.post('/device-attestation', async (req: Request, res: Response) => {
   try {
-    const { deviceId, platform, attestationToken } = deviceAttestationSchema.parse(req.body);
+    const { deviceId, platform } = deviceAttestationSchema.parse(req.body);
 
     // In production, verify device attestation with Apple/Google
     // For demo, accept any valid format
@@ -67,7 +67,7 @@ router.post('/device-attestation', async (req: Request, res: Response) => {
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      res.status(400).json({ error: 'Invalid input', details: error.errors });
+      res.status(400).json({ error: 'Invalid input', details: error.issues });
       return;
     }
     logger.error('Device attestation failed', { error: (error as Error).message });

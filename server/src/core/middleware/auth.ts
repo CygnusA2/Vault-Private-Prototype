@@ -80,6 +80,6 @@ export function requireRole(...roles: string[]) {
 
 export function generateToken(userId: string, role: string = 'client'): string {
   return jwt.sign({ id: userId, role }, config.jwt.secret, { 
-    expiresIn: config.jwt.expiresIn 
-  });
+    expiresIn: config.jwt.expiresIn as string
+  } as jwt.SignOptions);
 }

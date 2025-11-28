@@ -70,7 +70,7 @@ class DocuSignService {
   }
 
   async handleWebhook(event: WebhookEvent) {
-    logger.info('Processing DocuSign webhook', event);
+    logger.info('Processing DocuSign webhook', { ...event });
 
     // In production, update database and trigger downstream processes
     return {

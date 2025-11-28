@@ -78,7 +78,7 @@ router.post('/submit', async (req: AuthenticatedRequest, res: Response) => {
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      res.status(400).json({ error: 'Invalid input', details: error.errors });
+      res.status(400).json({ error: 'Invalid input', details: error.issues });
       return;
     }
     logger.error('KYC submission failed', { error: (error as Error).message });

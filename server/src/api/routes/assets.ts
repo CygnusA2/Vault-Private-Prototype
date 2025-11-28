@@ -2,8 +2,8 @@ import { Router, Response } from 'express';
 import { z } from 'zod';
 import { authMiddleware, AuthenticatedRequest } from '../../core/middleware/auth';
 import { logger } from '../../core/logger';
-import { cantonService } from '../../modules/canton';
-import { openaiService } from '../../modules/openai';
+import { cantonService } from '../../modules/canton/index';
+import { openaiService } from '../../modules/openai/index';
 
 const router = Router();
 
@@ -40,7 +40,7 @@ router.post('/verify', async (req: AuthenticatedRequest, res: Response) => {
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      res.status(400).json({ error: 'Invalid input', details: error.errors });
+      res.status(400).json({ error: 'Invalid input', details: error.issues });
       return;
     }
     logger.error('Asset verification failed', { error: (error as Error).message });
@@ -67,7 +67,7 @@ router.post('/tokenize', async (req: AuthenticatedRequest, res: Response) => {
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      res.status(400).json({ error: 'Invalid input', details: error.errors });
+      res.status(400).json({ error: 'Invalid input', details: error.issues });
       return;
     }
     logger.error('Asset tokenization failed', { error: (error as Error).message });
