@@ -118,10 +118,17 @@ export default function LedgerTokenScreen() {
     const totalInitial = INITIAL_PROPERTY1 + INITIAL_PROPERTY2;
     const convertedAmount = totalInitial - remainingProperty;
     
+    const property1ConvertedAmount = INITIAL_PROPERTY1 - property1Value;
+    const property2ConvertedAmount = INITIAL_PROPERTY2 - property2Value;
+    
     if (type === "entire") {
       setConvertedAmounts({
         convertedCash: convertedAmount,
         remainingAmount: remainingProperty,
+        property1Remaining: property1Value,
+        property1Converted: property1ConvertedAmount,
+        property2Remaining: property2Value,
+        property2Converted: property2ConvertedAmount,
       });
       setTransformed1("");
       setTransformed2("");
@@ -133,6 +140,10 @@ export default function LedgerTokenScreen() {
       setConvertedAmounts({
         convertedCash: partialAmount,
         remainingAmount: remainingProperty + partialRemaining,
+        property1Remaining: property1Value + partialRemaining,
+        property1Converted: Math.floor(property1ConvertedAmount / 2),
+        property2Remaining: property2Value,
+        property2Converted: Math.floor(property2ConvertedAmount / 2),
       });
       if (partialRemaining > 0) {
         setTransformed1(formatNumber(partialRemaining));
@@ -210,8 +221,8 @@ export default function LedgerTokenScreen() {
       </Animated.View>
 
       <Animated.View entering={FadeInDown.duration(400).delay(200)} style={styles.mainContent}>
-        <View style={styles.sectionTitle}>
-          <ThemedText style={styles.sectionTitleText}>Transform</ThemedText>
+        <View style={styles.sectionButton}>
+          <ThemedText style={styles.sectionButtonText}>Transform</ThemedText>
         </View>
 
         <View style={styles.propertySection}>
@@ -260,8 +271,8 @@ export default function LedgerTokenScreen() {
           </View>
         </View>
 
-        <View style={styles.sectionTitle}>
-          <ThemedText style={styles.sectionTitleText}>Reverse</ThemedText>
+        <View style={styles.sectionButton}>
+          <ThemedText style={styles.sectionButtonText}>Reverse</ThemedText>
         </View>
 
         <View style={styles.reverseSection}>
@@ -285,8 +296,8 @@ export default function LedgerTokenScreen() {
           </View>
         </View>
 
-        <View style={styles.sectionTitle}>
-          <ThemedText style={styles.sectionTitleText}>Convert into Cash</ThemedText>
+        <View style={styles.sectionButton}>
+          <ThemedText style={styles.sectionButtonText}>Convert into Cash</ThemedText>
         </View>
 
         <Animated.View entering={FadeInDown.duration(400).delay(300)} style={styles.actionGrid}>
@@ -496,16 +507,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     gap: Spacing.lg,
   },
-  sectionTitle: {
+  sectionButton: {
     alignItems: "center",
-    paddingVertical: Spacing.sm,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.xl,
+    backgroundColor: "#4ade80",
+    borderRadius: BorderRadius.full,
+    marginVertical: Spacing.md,
+    shadowColor: "#4ade80",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 6,
   },
-  sectionTitleText: {
+  sectionButtonText: {
     fontSize: 14,
-    fontWeight: "400",
-    color: "#4ade80",
+    fontWeight: "600",
+    color: "#1a1a1a",
     letterSpacing: 1,
-    textTransform: "uppercase",
   },
   propertySection: {
     gap: Spacing.xl,
@@ -561,7 +580,7 @@ const styles = StyleSheet.create({
     padding: 0,
   },
   valuePillPurple: {
-    paddingVertical: Spacing.lg,
+    paddingVertical: Spacing.sm,
     paddingHorizontal: Spacing.md,
     borderRadius: BorderRadius.full,
     backgroundColor: "rgba(20, 54, 30, 0.8)",
@@ -574,7 +593,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   valuePillCream: {
-    paddingVertical: Spacing.lg,
+    paddingVertical: Spacing.sm,
     paddingHorizontal: Spacing.md,
     borderRadius: BorderRadius.full,
     backgroundColor: "rgba(20, 54, 30, 0.8)",

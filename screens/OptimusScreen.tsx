@@ -90,16 +90,42 @@ export default function OptimusScreen() {
           <View style={styles.monetaryRow}>
             <View style={styles.monetaryPill}>
               <ThemedText style={styles.monetaryText}>
-                {convertedAmounts.remainingAmount > 0 
-                  ? `CST ${formatNumber(convertedAmounts.remainingAmount)}`
+                {convertedAmounts.property1Remaining > 0 
+                  ? `CST ${formatNumber(convertedAmounts.property1Remaining)}`
                   : "CST 0"}
               </ThemedText>
             </View>
             <View style={[styles.monetaryPill, styles.monetaryPillBlue]}>
               <ThemedText style={styles.monetaryText}>
-                {convertedAmounts.convertedCash > 0 
-                  ? `£ ${formatNumber(convertedAmounts.convertedCash)}`
-                  : "£ 0"}
+                {convertedAmounts.property1Converted > 0 
+                  ? `£ ${formatNumber(convertedAmounts.property1Converted)}`
+                  : "0"}
+              </ThemedText>
+            </View>
+          </View>
+
+          <View style={styles.addButtonsRow}>
+            <View style={styles.addButtonContainer}>
+              <AddButton />
+            </View>
+            <View style={styles.addButtonContainer}>
+              <AddButton />
+            </View>
+          </View>
+
+          <View style={styles.monetaryRow}>
+            <View style={styles.monetaryPill}>
+              <ThemedText style={styles.monetaryText}>
+                {convertedAmounts.property2Remaining > 0 
+                  ? `CST ${formatNumber(convertedAmounts.property2Remaining)}`
+                  : "CST 0"}
+              </ThemedText>
+            </View>
+            <View style={[styles.monetaryPill, styles.monetaryPillBlue]}>
+              <ThemedText style={styles.monetaryText}>
+                {convertedAmounts.property2Converted > 0 
+                  ? `£ ${formatNumber(convertedAmounts.property2Converted)}`
+                  : "0"}
               </ThemedText>
             </View>
           </View>

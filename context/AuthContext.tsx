@@ -23,6 +23,10 @@ interface UserData {
 interface ConvertedAmounts {
   convertedCash: number;
   remainingAmount: number;
+  property1Remaining: number;
+  property1Converted: number;
+  property2Remaining: number;
+  property2Converted: number;
 }
 
 interface AuthContextType {
@@ -81,6 +85,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [convertedAmounts, setConvertedAmountsState] = useState<ConvertedAmounts>({
     convertedCash: 0,
     remainingAmount: 0,
+    property1Remaining: 5000000,
+    property1Converted: 0,
+    property2Remaining: 2000000,
+    property2Converted: 0,
   });
 
   const login = () => {
