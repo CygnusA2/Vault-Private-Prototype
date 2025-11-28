@@ -1,6 +1,9 @@
 import React from "react";
 import { View, StyleSheet, Pressable } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { LinearGradient } from "expo-linear-gradient";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -11,6 +14,7 @@ import { ScreenScrollView } from "@/components/ScreenScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
+import { HomeStackParamList } from "@/navigation/HomeStackNavigator";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -45,11 +49,18 @@ const TRANSACTIONS = [
   },
 ];
 
+type DashboardNavProp = NativeStackNavigationProp<HomeStackParamList, "Dashboard">;
+
 export default function DashboardScreen() {
   const { userData } = useAuth();
+  const navigation = useNavigation<DashboardNavProp>();
 
   return (
     <ScreenScrollView contentContainerStyle={styles.scrollContent}>
+      <Animated.View entering={FadeInDown.duration(600).delay(50)}>
+        <PreApproveCard onPress={() => navigation.navigate("PreApprove")} />
+      </Animated.View>
+
       <Animated.View entering={FadeInDown.duration(600).delay(100)} style={styles.welcomeCard}>
         <View style={styles.welcomeHeader}>
           <View>
@@ -179,6 +190,53 @@ function QuickActionButton({
   );
 }
 
+function PreApproveCard({ onPress }: { onPress: () => void }) {
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <AnimatedPressable
+      onPressIn={() => {
+        scale.value = withSpring(0.98);
+      }}
+      onPressOut={() => {
+        scale.value = withSpring(1);
+      }}
+      onPress={onPress}
+      style={[styles.preApproveCard, animatedStyle]}
+    >
+      <LinearGradient
+        colors={["rgba(45, 90, 69, 0.3)", "rgba(61, 122, 90, 0.2)"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.preApproveGradient}
+      >
+        <View style={styles.preApproveContent}>
+          <View style={styles.preApproveLeft}>
+            <View style={styles.preApproveIconContainer}>
+              <Feather name="zap" size={20} color="#4ade80" />
+            </View>
+            <View>
+              <ThemedText style={styles.preApproveTitle}>
+                15-Minute Funding
+              </ThemedText>
+              <ThemedText style={styles.preApproveSubtitle}>
+                Unlock liquidity from your assets
+              </ThemedText>
+            </View>
+          </View>
+          <View style={styles.preApproveArrow}>
+            <Feather name="chevron-right" size={20} color="#A8C4B5" />
+          </View>
+        </View>
+      </LinearGradient>
+    </AnimatedPressable>
+  );
+}
+
 const styles = StyleSheet.create({
   scrollContent: {
     gap: Spacing.xl,
@@ -299,5 +357,54 @@ const styles = StyleSheet.create({
   },
   transactionAmountCredit: {
     color: Colors.dark.success,
+  },
+  preApproveCard: {
+    borderRadius: BorderRadius.md,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(168, 196, 181, 0.3)",
+  },
+  preApproveGradient: {
+    padding: Spacing.lg,
+  },
+  preApproveContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  preApproveLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
+    flex: 1,
+  },
+  preApproveIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(74, 222, 128, 0.15)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  preApproveTitle: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: Colors.dark.cream,
+    letterSpacing: 0.3,
+  },
+  preApproveSubtitle: {
+    fontSize: 12,
+    fontWeight: "300",
+    color: Colors.dark.sage,
+    letterSpacing: 0.3,
+    marginTop: 2,
+  },
+  preApproveArrow: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "rgba(168, 196, 181, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

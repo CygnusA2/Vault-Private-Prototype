@@ -21,6 +21,11 @@ export const Colors = {
     error: "#EF4444",
     warning: "#F59E0B",
     info: "#3B82F6",
+    cream: "#E8D5B7",
+    sage: "#A8C4B5",
+    successBright: "#4ade80",
+    cardGlass: "rgba(30, 40, 35, 0.8)",
+    cardBorderGlass: "rgba(168, 196, 181, 0.2)",
   },
   dark: {
     text: "#FFFFFF",
@@ -42,6 +47,11 @@ export const Colors = {
     error: "#EF4444",
     warning: "#F59E0B",
     info: "#3B82F6",
+    cream: "#E8D5B7",
+    sage: "#A8C4B5",
+    successBright: "#4ade80",
+    cardGlass: "rgba(30, 40, 35, 0.8)",
+    cardBorderGlass: "rgba(168, 196, 181, 0.2)",
   },
 };
 

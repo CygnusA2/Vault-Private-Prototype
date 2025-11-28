@@ -1,0 +1,294 @@
+// client/src/pages/PreApprove.tsx
+
+import BankHeader from "@/components/BankHeader";
+import DownloadButton from "@/components/DownloadButton";
+import { Upload, Check, Clock } from "lucide-react";
+import { useState } from "react";
+
+export default function PreApprove() {
+  const [uploadedDocs, setUploadedDocs] = useState<string[]>([]);
+
+  const requiredDocs = [
+    { id: 'id', label: 'Government-issued ID', critical: true, points: 15 },
+    { id: 'ownership', label: 'Proof of Ownership', critical: true, points: 20 },
+    { id: 'address', label: 'Proof of Address', critical: true, points: 10 },
+    { id: 'asset', label: 'Asset Documentation', critical: true, points: 15 },
+  ];
+
+  const baseApproval = 40;
+  const uploadedPoints = requiredDocs
+    .filter(doc => uploadedDocs.includes(doc.id))
+    .reduce((sum, doc) => sum + doc.points, 0);
+  const approvalLikelihood = Math.min(baseApproval + uploadedPoints, 100);
+  
+  const completeness = (uploadedDocs.length / requiredDocs.length) * 100;
+
+  const getApprovalLabel = (likelihood: number) => {
+    if (likelihood >= 80) return 'High';
+    if (likelihood >= 60) return 'Medium';
+    return 'Low';
+  };
+
+  const toggleDoc = (docId: string) => {
+    setUploadedDocs(prev => 
+      prev.includes(docId) 
+        ? prev.filter(id => id !== docId)
+        : [...prev, docId]
+    );
+  };
+
+  return (
+    <div className="min-h-screen bg-background flex flex-col max-w-md mx-auto">
+      <BankHeader
+        title="Pre-Approve"
+        onBack={() => window.history.back()}
+        onProfile={() => console.log('Profile clicked')}
+      />
+
+      <div className="flex-1 overflow-y-auto pb-6">
+        <div className="px-6 py-6 space-y-6">
+          {/* Top Area - Status */}
+          <div className="text-center space-y-2">
+            <h2 
+              className="text-2xl font-light"
+              style={{ 
+                fontFamily: 'var(--font-display)', 
+                letterSpacing: '0.05em', 
+                fontWeight: 300,
+                color: '#E8D5B7'
+              }}
+            >
+              Pre-Approval in progress
+            </h2>
+            <p 
+              className="text-sm"
+              style={{ 
+                fontFamily: 'var(--font-display)', 
+                letterSpacing: '0.05em', 
+                fontWeight: 300,
+                color: '#A8C4B5'
+              }}
+            >
+              Upload your documents to unlock 15-minute funding.
+            </p>
+            <div 
+              className="flex items-center justify-center gap-2 pt-1"
+              style={{ 
+                fontFamily: 'var(--font-display)', 
+                letterSpacing: '0.05em', 
+                fontWeight: 300,
+                color: '#A8C4B5',
+                fontSize: '0.7rem'
+              }}
+            >
+              <Clock className="w-3 h-3" />
+              Estimated time to pre-approval: 2–3 minutes
+            </div>
+            
+            {/* Document Requirements */}
+            <div 
+              className="text-left space-y-1 pt-4"
+              style={{ 
+                fontFamily: 'var(--font-display)', 
+                letterSpacing: '0.03em', 
+                fontWeight: 300,
+                color: '#A8C4B5',
+                fontSize: '0.7rem'
+              }}
+            >
+              <p>• All documents must be fully digitised</p>
+              <p>• Illiquid asset documents must be issued within last 3 months</p>
+              <p>• Passport/DNI must be valid and not expired</p>
+              <p>• Proof of address must be issued within last 1 month</p>
+            </div>
+          </div>
+
+          {/* Middle - Upload Card */}
+          <div 
+            className="border border-card-border rounded-lg p-6 backdrop-blur-sm bg-card/80 text-center space-y-3"
+            style={{ 
+              boxShadow: '0 0 20px rgba(232, 213, 183, 0.1)'
+            }}
+          >
+            <Upload 
+              className="w-12 h-12 mx-auto" 
+              style={{ color: '#E8D5B7', opacity: 0.6 }}
+            />
+            <button
+              className="w-full py-3 px-6 rounded-full text-sm font-normal bg-gradient-to-r from-primary via-primary to-accent hover:from-primary/90 hover:via-primary/90 hover:to-accent/90 shadow-lg shadow-primary/30 border border-primary/20"
+              style={{ 
+                color: '#E5E4E2', 
+                fontFamily: 'var(--font-sans)',
+                letterSpacing: '0.03em'
+              }}
+              data-testid="button-upload-document"
+            >
+              Upload document
+            </button>
+          </div>
+
+          {/* Checklist of Required Documents */}
+          <div className="space-y-3">
+            <h3 
+              className="text-sm font-light uppercase"
+              style={{ 
+                fontFamily: 'var(--font-display)', 
+                letterSpacing: '0.08em', 
+                fontWeight: 300,
+                color: '#A8C4B5'
+              }}
+            >
+              Required Documents
+            </h3>
+            {requiredDocs.map(doc => (
+              <div
+                key={doc.id}
+                onClick={() => toggleDoc(doc.id)}
+                className="flex items-center gap-3 p-3 rounded-lg border border-card-border backdrop-blur-sm bg-card/40 hover-elevate cursor-pointer"
+                data-testid={`doc-${doc.id}`}
+              >
+                <div 
+                  className="w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0"
+                  style={{ 
+                    borderColor: uploadedDocs.includes(doc.id) ? '#4ade80' : '#A8C4B5',
+                    backgroundColor: uploadedDocs.includes(doc.id) ? '#4ade80' : 'transparent'
+                  }}
+                >
+                  {uploadedDocs.includes(doc.id) && (
+                    <Check className="w-3 h-3" style={{ color: '#1a1a1a' }} />
+                  )}
+                </div>
+                <div className="flex-1">
+                  <p 
+                    className="text-sm"
+                    style={{ 
+                      fontFamily: 'var(--font-display)', 
+                      letterSpacing: '0.03em', 
+                      fontWeight: 300,
+                      color: '#E8D5B7'
+                    }}
+                  >
+                    {doc.label}
+                  </p>
+                  {doc.critical && (
+                    <p 
+                      className="text-xs"
+                      style={{ 
+                        fontFamily: 'var(--font-display)', 
+                        letterSpacing: '0.03em', 
+                        fontWeight: 300,
+                        color: '#A8C4B5',
+                        fontSize: '0.65rem'
+                      }}
+                    >
+                      Required • +{doc.points}% approval
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Bottom - Completion & Approval */}
+          <div className="space-y-4 pt-2">
+            {/* Profile Completeness */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <p 
+                  className="text-xs uppercase"
+                  style={{ 
+                    fontFamily: 'var(--font-display)', 
+                    letterSpacing: '0.08em', 
+                    fontWeight: 300,
+                    color: '#A8C4B5'
+                  }}
+                >
+                  Profile Completeness
+                </p>
+                <p 
+                  className="text-xs"
+                  style={{ 
+                    fontFamily: 'var(--font-display)', 
+                    letterSpacing: '0.05em', 
+                    fontWeight: 300,
+                    color: '#E8D5B7'
+                  }}
+                >
+                  {Math.round(completeness)}%
+                </p>
+              </div>
+              <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                <div 
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{
+                    width: `${completeness}%`,
+                    background: 'linear-gradient(90deg, #D4AF37 0%, #F4E5C3 100%)',
+                    boxShadow: '0 0 8px rgba(212, 175, 55, 0.6)'
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Approval Likelihood */}
+            <div 
+              className="border border-card-border rounded-lg p-4 backdrop-blur-sm bg-card/60 text-center"
+              style={{ 
+                boxShadow: '0 0 20px rgba(74, 222, 128, 0.1)'
+              }}
+            >
+              <p 
+                className="text-xs uppercase mb-2"
+                style={{ 
+                  fontFamily: 'var(--font-display)', 
+                  letterSpacing: '0.08em', 
+                  fontWeight: 300,
+                  color: '#A8C4B5'
+                }}
+              >
+                Approval Likelihood
+              </p>
+              <p 
+                className="text-3xl font-light mb-1"
+                style={{ 
+                  fontFamily: 'var(--font-display)', 
+                  letterSpacing: '0.03em', 
+                  fontWeight: 300,
+                  color: '#4ade80'
+                }}
+              >
+                {approvalLikelihood}%
+              </p>
+              <p 
+                className="text-sm"
+                style={{ 
+                  fontFamily: 'var(--font-display)', 
+                  letterSpacing: '0.05em', 
+                  fontWeight: 300,
+                  color: '#E8D5B7'
+                }}
+              >
+                {getApprovalLabel(approvalLikelihood)}
+              </p>
+              {uploadedDocs.length < requiredDocs.length && (
+                <p 
+                  className="text-xs mt-2"
+                  style={{ 
+                    fontFamily: 'var(--font-display)', 
+                    letterSpacing: '0.03em', 
+                    fontWeight: 300,
+                    color: '#A8C4B5',
+                    fontSize: '0.65rem'
+                  }}
+                >
+                  Upload all required documents to maximize approval chances
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <DownloadButton screenName="pre-approve" />
+      </div>
+    </div>
+  );
+}
