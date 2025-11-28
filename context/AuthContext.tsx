@@ -6,9 +6,11 @@ interface UserData {
   lastName: string;
   documentType: string;
   documentUploaded: boolean;
+  documentsUploaded: boolean;
   selfieUploaded: boolean;
   fingerprintEnabled: boolean;
   irisEnabled: boolean;
+  dowJonesChecked: boolean;
   address: {
     street: string;
     city: string;
@@ -37,9 +39,11 @@ const defaultUserData: UserData = {
   lastName: "",
   documentType: "",
   documentUploaded: false,
+  documentsUploaded: false,
   selfieUploaded: false,
   fingerprintEnabled: false,
   irisEnabled: false,
+  dowJonesChecked: false,
   address: {
     street: "",
     city: "",
@@ -90,14 +94,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       lastName: "Rothschild",
       documentType: "passport",
       documentUploaded: true,
+      documentsUploaded: true,
       selfieUploaded: true,
       fingerprintEnabled: true,
       irisEnabled: true,
+      dowJonesChecked: true,
       address: {
-        street: "123 Park Avenue",
-        city: "New York",
-        country: "United States",
-        postalCode: "10022",
+        street: "2800 Sand Hill Road",
+        city: "Menlo Park",
+        country: "California, United States",
+        postalCode: "94025",
       },
       email: "a.rothschild@vault.private",
     });

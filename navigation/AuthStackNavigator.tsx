@@ -1,8 +1,6 @@
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import WelcomeScreen from "@/screens/WelcomeScreen";
-import PhoneEntryScreen from "@/screens/PhoneEntryScreen";
-import SMSVerificationScreen from "@/screens/SMSVerificationScreen";
 import KYCNameScreen from "@/screens/KYCNameScreen";
 import KYCDocumentScreen from "@/screens/KYCDocumentScreen";
 import KYCSelfieScreen from "@/screens/KYCSelfieScreen";
@@ -15,8 +13,6 @@ import { getCommonScreenOptions } from "@/navigation/screenOptions";
 
 export type AuthStackParamList = {
   Welcome: undefined;
-  PhoneEntry: undefined;
-  SMSVerification: { phoneNumber: string };
   KYCName: undefined;
   KYCDocument: undefined;
   KYCSelfie: undefined;
@@ -39,22 +35,6 @@ export default function AuthStackNavigator() {
       }}
     >
       <Stack.Screen name="Welcome" component={WelcomeScreen} />
-      <Stack.Screen
-        name="PhoneEntry"
-        component={PhoneEntryScreen}
-        options={{
-          headerShown: true,
-          headerTitle: "",
-        }}
-      />
-      <Stack.Screen
-        name="SMSVerification"
-        component={SMSVerificationScreen}
-        options={{
-          headerShown: true,
-          headerTitle: "",
-        }}
-      />
       <Stack.Screen
         name="KYCName"
         component={KYCNameScreen}

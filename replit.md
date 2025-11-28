@@ -14,8 +14,12 @@ A proof-of-concept mobile app prototype for a proprietary authenticator and priv
 - Face recognition login simulation with 2FA auto-fill
 - Dashboard with mock account data
 - **Pre-Approve screen added** - Now appears immediately after sign-in (both new users and returning users) before Dashboard
-- KYC screens simplified for demo - Continue buttons work without requiring all steps
 - Theme extended with cream (#E8D5B7) and sage (#A8C4B5) accent colors for Pre-Approve
+- **Auth flow streamlined** - Phone entry and SMS verification consolidated into Welcome screen
+- **Document screen updated** - Now requires 3 documents: Passport, National ID, Proof of Address (no older than 1 month)
+- **Face scan animation added** - Up/down scanning line with progress percentage
+- **Dow Jones Risk & Compliance** - New security layer added to Biometric Setup screen
+- **California address** - Default address updated to Menlo Park, CA
 
 ## Project Architecture
 
@@ -37,14 +41,13 @@ A proof-of-concept mobile app prototype for a proprietary authenticator and priv
 │   ├── MainTabNavigator.tsx   # 4-tab navigation
 │   └── HomeStackNavigator.tsx # Home tab stack
 ├── screens/
-│   ├── WelcomeScreen.tsx      # Landing page
-│   ├── PhoneEntryScreen.tsx   # Phone number input
-│   ├── SMSVerificationScreen.tsx # 6-digit OTP
+│   ├── WelcomeScreen.tsx      # Phone entry + SMS verification combined
 │   ├── KYCNameScreen.tsx      # Personal details (Step 1)
-│   ├── KYCDocumentScreen.tsx  # ID upload (Step 2)
-│   ├── KYCSelfieScreen.tsx    # Photo verification (Step 3)
-│   ├── KYCBiometricScreen.tsx # Biometric setup (Step 4)
-│   ├── KYCAddressScreen.tsx   # Address details (Step 5)
+│   ├── KYCDocumentScreen.tsx  # Document upload - 3 required (Step 2)
+│   ├── KYCSelfieScreen.tsx    # Face scan with animation (Step 3)
+│   ├── KYCBiometricScreen.tsx # Biometric + Dow Jones (Step 4)
+│   ├── KYCAddressScreen.tsx   # California address (Step 5)
+│   ├── PreApproveScreen.tsx   # Pre-approval document upload
 │   ├── FaceRecognitionScreen.tsx # Face scan login
 │   ├── TwoFactorScreen.tsx    # 2FA auto-fill
 │   ├── DashboardScreen.tsx    # Main home
@@ -72,13 +75,15 @@ A proof-of-concept mobile app prototype for a proprietary authenticator and priv
 ## Key Features Demonstrated
 
 ### New User Onboarding
-1. Welcome screen with "Get Started" / "Sign In" options
-2. Phone number entry with country code picker
-3. SMS verification (demo: use 123456)
-4. 5-step KYC: Name → Document → Selfie → Biometrics → Address
-5. Automatic location detection for address auto-fill
-6. **Pre-Approve screen** with document upload simulation
-7. Continue to Dashboard
+1. **Welcome screen** - Phone entry with country code picker, auto-sends SMS code
+2. **SMS verification** - 6-digit code entry on same screen (demo: use 123456)
+3. **Personal Details** - First name, last name, email (Step 1)
+4. **Identity Documents** - Upload 3 required docs: Passport, National ID, Proof of Address (Step 2)
+5. **Photo Verification** - Face scan with animated up/down scanning line (Step 3)
+6. **Biometric Setup** - Fingerprint, Iris Recognition, Dow Jones Risk & Compliance check (Step 4)
+7. **Address Details** - California address auto-fill: 2800 Sand Hill Road, Menlo Park (Step 5)
+8. **Pre-Approve screen** - Document upload simulation
+9. Continue to Dashboard
 
 ### Returning User Login
 1. Face recognition simulation
@@ -91,6 +96,16 @@ A proof-of-concept mobile app prototype for a proprietary authenticator and priv
 - **Accounts Tab**: List of accounts with balances
 - **Settings Tab**: Security, profile, preferences
 - **Profile Tab**: User info, verification badges
+
+## KYC Document Requirements
+1. **Passport** - Valid government-issued passport
+2. **National ID Card** - Front and back of national ID
+3. **Proof of Address** - Utility bill or bank statement, no older than 1 month
+
+## Security Features
+- **Fingerprint** - Biometric enrollment simulation
+- **Iris Recognition** - Enhanced security biometric
+- **Dow Jones Risk & Compliance** - Deep due diligence against global sanctions and watchlists
 
 ## Future Development (Production Phase)
 - Real SMS gateway integration (Twilio)

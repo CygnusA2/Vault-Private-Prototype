@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, StyleSheet, Pressable, Switch } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Feather } from "@expo/vector-icons";
@@ -6,7 +6,10 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
+  withRepeat,
+  withTiming,
   FadeInDown,
+  FadeIn,
 } from "react-native-reanimated";
 import { AuthScreenScrollView } from "@/components/AuthScreenScrollView";
 import { ThemedText } from "@/components/ThemedText";
@@ -25,12 +28,32 @@ export default function KYCBiometricScreen({ navigation }: KYCBiometricScreenPro
   const { setUserData } = useAuth();
   const [fingerprintEnabled, setFingerprintEnabled] = useState(false);
   const [irisEnabled, setIrisEnabled] = useState(false);
+  const [dowJonesEnabled, setDowJonesEnabled] = useState(false);
   const [fingerprintEnrolled, setFingerprintEnrolled] = useState(false);
   const [irisEnrolled, setIrisEnrolled] = useState(false);
+  const [dowJonesChecked, setDowJonesChecked] = useState(false);
+  const [dowJonesChecking, setDowJonesChecking] = useState(false);
   const buttonScale = useSharedValue(1);
+  const pulseAnim = useSharedValue(1);
+
+  useEffect(() => {
+    if (dowJonesChecking) {
+      pulseAnim.value = withRepeat(
+        withTiming(1.05, { duration: 600 }),
+        -1,
+        true
+      );
+    } else {
+      pulseAnim.value = 1;
+    }
+  }, [dowJonesChecking]);
 
   const buttonAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: buttonScale.value }],
+  }));
+
+  const pulseStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pulseAnim.value }],
   }));
 
   const handleFingerprintToggle = (value: boolean) => {
@@ -51,15 +74,25 @@ export default function KYCBiometricScreen({ navigation }: KYCBiometricScreenPro
     }
   };
 
+  const handleDowJonesToggle = (value: boolean) => {
+    setDowJonesEnabled(value);
+    if (value) {
+      setDowJonesChecking(true);
+      setTimeout(() => {
+        setDowJonesChecking(false);
+        setDowJonesChecked(true);
+      }, 2500);
+    } else {
+      setDowJonesChecked(false);
+    }
+  };
+
   const handleContinue = () => {
     setUserData({
       fingerprintEnabled: fingerprintEnrolled,
       irisEnabled: irisEnrolled,
+      dowJonesChecked: dowJonesChecked,
     });
-    navigation.navigate("KYCAddress");
-  };
-
-  const handleSkip = () => {
     navigation.navigate("KYCAddress");
   };
 
@@ -195,6 +228,97 @@ export default function KYCBiometricScreen({ navigation }: KYCBiometricScreenPro
             </View>
           ) : null}
         </View>
+
+        <Animated.View 
+          entering={FadeIn.duration(600).delay(400)}
+          style={[styles.biometricCard, styles.dowJonesCard]}
+        >
+          <View style={styles.biometricHeader}>
+            <Animated.View
+              style={[
+                styles.iconContainer,
+                dowJonesChecked && styles.iconContainerActive,
+                dowJonesChecking && styles.iconContainerChecking,
+                pulseStyle,
+              ]}
+            >
+              <Feather
+                name="shield"
+                size={28}
+                color={
+                  dowJonesChecked
+                    ? Colors.dark.success
+                    : dowJonesChecking
+                    ? Colors.dark.primary
+                    : Colors.dark.textSecondary
+                }
+              />
+            </Animated.View>
+            <View style={styles.biometricInfo}>
+              <ThemedText type="h4" style={styles.biometricTitle}>
+                Dow Jones Risk & Compliance
+              </ThemedText>
+              <ThemedText
+                type="small"
+                style={{ color: Colors.dark.textSecondary }}
+              >
+                {dowJonesChecked
+                  ? "Verification complete - No issues found"
+                  : dowJonesChecking
+                  ? "Running compliance check..."
+                  : "Deep due diligence verification"}
+              </ThemedText>
+            </View>
+            <Switch
+              value={dowJonesEnabled}
+              onValueChange={handleDowJonesToggle}
+              disabled={dowJonesChecking}
+              trackColor={{
+                false: Colors.dark.backgroundTertiary,
+                true: Colors.dark.primary,
+              }}
+              thumbColor={Colors.dark.text}
+            />
+          </View>
+          
+          <View style={styles.dowJonesDescription}>
+            <Feather name="info" size={16} color={Colors.dark.textTertiary} />
+            <ThemedText
+              type="small"
+              style={styles.dowJonesDescriptionText}
+            >
+              We will securely check your provided data for deep due diligence against global sanctions and watchlists in compliance with international banking regulations
+            </ThemedText>
+          </View>
+
+          {dowJonesChecking ? (
+            <View style={styles.checkingContainer}>
+              <View style={styles.checkingProgress}>
+                <View style={styles.checkingDot} />
+                <View style={[styles.checkingDot, styles.checkingDotDelay1]} />
+                <View style={[styles.checkingDot, styles.checkingDotDelay2]} />
+              </View>
+              <ThemedText
+                type="small"
+                style={{ color: Colors.dark.primary }}
+              >
+                Checking global databases...
+              </ThemedText>
+            </View>
+          ) : null}
+
+          {dowJonesChecked ? (
+            <View style={styles.successBadge}>
+              <Feather name="check-circle" size={18} color={Colors.dark.success} />
+              <ThemedText
+                type="small"
+                style={{ color: Colors.dark.success }}
+              >
+                Cleared - No matches found in global watchlists
+              </ThemedText>
+            </View>
+          ) : null}
+        </Animated.View>
       </Animated.View>
 
       <View style={styles.spacer} />
@@ -217,12 +341,6 @@ export default function KYCBiometricScreen({ navigation }: KYCBiometricScreenPro
             Continue
           </ThemedText>
         </AnimatedPressable>
-
-        <Pressable style={styles.skipButton} onPress={handleSkip}>
-          <ThemedText type="body" style={{ color: Colors.dark.textSecondary }}>
-            Skip for now
-          </ThemedText>
-        </Pressable>
       </Animated.View>
     </AuthScreenScrollView>
   );
@@ -233,7 +351,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   header: {
-    marginBottom: Spacing["3xl"],
+    marginBottom: Spacing["2xl"],
   },
   title: {
     marginBottom: Spacing.md,
@@ -251,6 +369,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.dark.border,
   },
+  dowJonesCard: {
+    borderColor: Colors.dark.primary,
+    backgroundColor: "rgba(201, 169, 97, 0.03)",
+  },
   biometricHeader: {
     flexDirection: "row",
     alignItems: "center",
@@ -266,6 +388,9 @@ const styles = StyleSheet.create({
   },
   iconContainerActive: {
     backgroundColor: "rgba(16, 185, 129, 0.1)",
+  },
+  iconContainerChecking: {
+    backgroundColor: "rgba(201, 169, 97, 0.15)",
   },
   biometricInfo: {
     flex: 1,
@@ -283,9 +408,58 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: Colors.dark.border,
   },
+  dowJonesDescription: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: Spacing.sm,
+    marginTop: Spacing.lg,
+    paddingTop: Spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: Colors.dark.border,
+  },
+  dowJonesDescriptionText: {
+    flex: 1,
+    color: Colors.dark.textTertiary,
+    lineHeight: 18,
+  },
+  checkingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
+    marginTop: Spacing.lg,
+    padding: Spacing.md,
+    backgroundColor: "rgba(201, 169, 97, 0.08)",
+    borderRadius: BorderRadius.sm,
+  },
+  checkingProgress: {
+    flexDirection: "row",
+    gap: Spacing.xs,
+  },
+  checkingDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: Colors.dark.primary,
+    opacity: 0.4,
+  },
+  checkingDotDelay1: {
+    opacity: 0.6,
+  },
+  checkingDotDelay2: {
+    opacity: 1,
+  },
+  successBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+    marginTop: Spacing.lg,
+    padding: Spacing.md,
+    backgroundColor: "rgba(16, 185, 129, 0.08)",
+    borderRadius: BorderRadius.sm,
+  },
   spacer: {
     flex: 1,
-    minHeight: Spacing["3xl"],
+    minHeight: Spacing["2xl"],
   },
   buttonContainer: {
     gap: Spacing.lg,
@@ -299,9 +473,5 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontWeight: "600",
-  },
-  skipButton: {
-    alignItems: "center",
-    paddingVertical: Spacing.md,
   },
 });

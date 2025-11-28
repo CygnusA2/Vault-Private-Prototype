@@ -20,34 +20,63 @@ type KYCDocumentScreenProps = {
   navigation: NativeStackNavigationProp<AuthStackParamList, "KYCDocument">;
 };
 
-const DOCUMENT_TYPES = [
-  { id: "passport", label: "Passport", icon: "book" as const },
-  { id: "id_card", label: "National ID Card", icon: "credit-card" as const },
-  { id: "drivers", label: "Driver License", icon: "truck" as const },
-];
+type DocumentRequirement = {
+  id: string;
+  label: string;
+  description: string;
+  icon: keyof typeof Feather.glyphMap;
+  uploaded: boolean;
+};
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export default function KYCDocumentScreen({ navigation }: KYCDocumentScreenProps) {
   const { setUserData } = useAuth();
-  const [selectedType, setSelectedType] = useState<string | null>(null);
-  const [isUploaded, setIsUploaded] = useState(false);
   const buttonScale = useSharedValue(1);
+
+  const [documents, setDocuments] = useState<DocumentRequirement[]>([
+    {
+      id: "passport",
+      label: "Passport",
+      description: "Valid government-issued passport",
+      icon: "book",
+      uploaded: false,
+    },
+    {
+      id: "id_card",
+      label: "National ID Card",
+      description: "Front and back of national ID",
+      icon: "credit-card",
+      uploaded: false,
+    },
+    {
+      id: "proof_of_address",
+      label: "Proof of Address",
+      description: "Utility bill or bank statement - No older than 1 month",
+      icon: "file-text",
+      uploaded: false,
+    },
+  ]);
 
   const buttonAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: buttonScale.value }],
   }));
 
-  const isValid = selectedType && isUploaded;
+  const allUploaded = documents.every((doc) => doc.uploaded);
+  const uploadedCount = documents.filter((doc) => doc.uploaded).length;
 
-  const handleUpload = () => {
+  const handleUpload = (docId: string) => {
     setTimeout(() => {
-      setIsUploaded(true);
+      setDocuments((prev) =>
+        prev.map((doc) =>
+          doc.id === docId ? { ...doc, uploaded: true } : doc
+        )
+      );
     }, 500);
   };
 
   const handleContinue = () => {
-    setUserData({ documentType: selectedType || "passport", documentUploaded: true });
+    setUserData({ documentsUploaded: true });
     navigation.navigate("KYCSelfie");
   };
 
@@ -57,118 +86,133 @@ export default function KYCDocumentScreen({ navigation }: KYCDocumentScreenProps
 
       <Animated.View entering={FadeInDown.duration(600).delay(100)} style={styles.header}>
         <ThemedText type="h1" style={styles.title}>
-          Identity Document
+          Identity Documents
         </ThemedText>
         <ThemedText
           type="body"
           style={[styles.subtitle, { color: Colors.dark.textSecondary }]}
         >
-          Select and upload a valid government-issued ID for verification
+          Please upload all required documents for verification
         </ThemedText>
+        <View style={styles.progressContainer}>
+          <View style={styles.progressBar}>
+            <View 
+              style={[
+                styles.progressFill, 
+                { width: `${(uploadedCount / documents.length) * 100}%` }
+              ]} 
+            />
+          </View>
+          <ThemedText type="small" style={{ color: Colors.dark.textSecondary }}>
+            {uploadedCount} of {documents.length} documents uploaded
+          </ThemedText>
+        </View>
       </Animated.View>
 
-      <Animated.View entering={FadeInDown.duration(600).delay(200)} style={styles.documentTypes}>
-        {DOCUMENT_TYPES.map((type) => (
-          <Pressable
-            key={type.id}
-            style={[
-              styles.documentOption,
-              selectedType === type.id && styles.documentOptionSelected,
-            ]}
-            onPress={() => {
-              setSelectedType(type.id);
-              setIsUploaded(false);
-            }}
+      <Animated.View entering={FadeInDown.duration(600).delay(200)} style={styles.documentsList}>
+        {documents.map((doc, index) => (
+          <Animated.View
+            key={doc.id}
+            entering={FadeIn.duration(400).delay(index * 100)}
           >
-            <Feather
-              name={type.icon}
-              size={24}
-              color={
-                selectedType === type.id
-                  ? Colors.dark.primary
-                  : Colors.dark.textSecondary
-              }
-            />
-            <ThemedText
-              type="body"
+            <Pressable
               style={[
-                styles.documentLabel,
-                selectedType === type.id && styles.documentLabelSelected,
+                styles.documentItem,
+                doc.uploaded && styles.documentItemUploaded,
               ]}
+              onPress={() => !doc.uploaded && handleUpload(doc.id)}
             >
-              {type.label}
-            </ThemedText>
-            {selectedType === type.id ? (
-              <Feather name="check-circle" size={20} color={Colors.dark.primary} />
-            ) : null}
-          </Pressable>
+              <View style={[
+                styles.iconContainer,
+                doc.uploaded && styles.iconContainerUploaded,
+              ]}>
+                <Feather
+                  name={doc.uploaded ? "check" : doc.icon}
+                  size={24}
+                  color={doc.uploaded ? Colors.dark.success : Colors.dark.primary}
+                />
+              </View>
+              
+              <View style={styles.documentInfo}>
+                <ThemedText
+                  type="h4"
+                  style={[
+                    styles.documentLabel,
+                    doc.uploaded && styles.documentLabelUploaded,
+                  ]}
+                >
+                  {doc.label}
+                </ThemedText>
+                <ThemedText
+                  type="small"
+                  style={{ color: Colors.dark.textSecondary }}
+                >
+                  {doc.description}
+                </ThemedText>
+              </View>
+
+              {doc.uploaded ? (
+                <View style={styles.uploadedBadge}>
+                  <Feather name="check-circle" size={20} color={Colors.dark.success} />
+                </View>
+              ) : (
+                <View style={styles.uploadButton}>
+                  <Feather name="upload" size={18} color={Colors.dark.primary} />
+                  <ThemedText type="small" style={{ color: Colors.dark.primary }}>
+                    Upload
+                  </ThemedText>
+                </View>
+              )}
+            </Pressable>
+          </Animated.View>
         ))}
       </Animated.View>
 
-      {selectedType ? (
-        <Animated.View entering={FadeIn.duration(400)} style={styles.uploadSection}>
-          <Pressable
-            style={[
-              styles.uploadBox,
-              isUploaded && styles.uploadBoxSuccess,
-            ]}
-            onPress={handleUpload}
-          >
-            {isUploaded ? (
-              <>
-                <View style={styles.successIcon}>
-                  <Feather name="check" size={32} color={Colors.dark.success} />
-                </View>
-                <ThemedText type="h4" style={styles.uploadTitle}>
-                  Document Uploaded
-                </ThemedText>
-                <ThemedText
-                  type="small"
-                  style={{ color: Colors.dark.textSecondary }}
-                >
-                  Tap to change document
-                </ThemedText>
-              </>
-            ) : (
-              <>
-                <View style={styles.uploadIcon}>
-                  <Feather name="upload" size={32} color={Colors.dark.primary} />
-                </View>
-                <ThemedText type="h4" style={styles.uploadTitle}>
-                  Upload Document
-                </ThemedText>
-                <ThemedText
-                  type="small"
-                  style={{ color: Colors.dark.textSecondary }}
-                >
-                  Take a photo or select from gallery
-                </ThemedText>
-              </>
-            )}
-          </Pressable>
-        </Animated.View>
-      ) : null}
+      <View style={styles.infoBox}>
+        <Feather name="shield" size={18} color={Colors.dark.primary} />
+        <ThemedText type="small" style={{ color: Colors.dark.textSecondary, flex: 1 }}>
+          Your documents are encrypted and securely stored in compliance with international banking regulations.
+        </ThemedText>
+      </View>
 
       <View style={styles.spacer} />
 
       <Animated.View entering={FadeInDown.duration(600).delay(300)}>
         <AnimatedPressable
-          onPress={handleContinue}
+          onPress={allUploaded ? handleContinue : undefined}
+          disabled={!allUploaded}
           onPressIn={() => {
-            buttonScale.value = withSpring(0.97);
+            if (allUploaded) {
+              buttonScale.value = withSpring(0.97);
+            }
           }}
           onPressOut={() => {
             buttonScale.value = withSpring(1);
           }}
-          style={[styles.continueButton, buttonAnimatedStyle]}
+          style={[
+            styles.continueButton, 
+            !allUploaded && styles.continueButtonDisabled,
+            buttonAnimatedStyle
+          ]}
         >
           <ThemedText
             type="h4"
             style={[styles.buttonText, { color: Colors.dark.buttonText }]}
           >
-            Continue
+            {allUploaded ? "Continue" : `Upload All Documents (${uploadedCount}/${documents.length})`}
           </ThemedText>
         </AnimatedPressable>
+
+        {!allUploaded ? (
+          <Pressable 
+            style={styles.skipLink}
+            onPress={handleContinue}
+          >
+            <ThemedText type="small" style={{ color: Colors.dark.textTertiary }}>
+              Skip for demo
+            </ThemedText>
+          </Pressable>
+        ) : null}
       </Animated.View>
     </AuthScreenScrollView>
   );
@@ -186,12 +230,27 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     lineHeight: 22,
+    marginBottom: Spacing.lg,
   },
-  documentTypes: {
+  progressContainer: {
+    gap: Spacing.sm,
+  },
+  progressBar: {
+    height: 4,
+    backgroundColor: Colors.dark.backgroundSecondary,
+    borderRadius: 2,
+    overflow: "hidden",
+  },
+  progressFill: {
+    height: "100%",
+    backgroundColor: Colors.dark.primary,
+    borderRadius: 2,
+  },
+  documentsList: {
     gap: Spacing.md,
-    marginBottom: Spacing["2xl"],
+    marginBottom: Spacing.xl,
   },
-  documentOption: {
+  documentItem: {
     flexDirection: "row",
     alignItems: "center",
     padding: Spacing.lg,
@@ -199,62 +258,57 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.sm,
     borderWidth: 1,
     borderColor: Colors.dark.border,
-    gap: Spacing.lg,
+    gap: Spacing.md,
   },
-  documentOptionSelected: {
-    borderColor: Colors.dark.primary,
+  documentItemUploaded: {
+    borderColor: Colors.dark.success,
+    backgroundColor: "rgba(16, 185, 129, 0.05)",
+  },
+  iconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: Colors.dark.backgroundSecondary,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  iconContainerUploaded: {
+    backgroundColor: "rgba(16, 185, 129, 0.15)",
+  },
+  documentInfo: {
+    flex: 1,
+    gap: Spacing.xs,
   },
   documentLabel: {
-    flex: 1,
     color: Colors.dark.text,
   },
-  documentLabelSelected: {
-    color: Colors.dark.primary,
-    fontWeight: "600",
+  documentLabelUploaded: {
+    color: Colors.dark.success,
   },
-  uploadSection: {
-    marginBottom: Spacing["2xl"],
+  uploadedBadge: {
+    padding: Spacing.sm,
   },
-  uploadBox: {
+  uploadButton: {
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    padding: Spacing["3xl"],
-    backgroundColor: Colors.dark.backgroundDefault,
-    borderRadius: BorderRadius.md,
-    borderWidth: 2,
-    borderColor: Colors.dark.border,
-    borderStyle: "dashed",
-  },
-  uploadBoxSuccess: {
-    borderColor: Colors.dark.success,
-    borderStyle: "solid",
-  },
-  uploadIcon: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    gap: Spacing.xs,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
     backgroundColor: Colors.dark.backgroundSecondary,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: Spacing.lg,
+    borderRadius: BorderRadius.xs,
   },
-  successIcon: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: "rgba(16, 185, 129, 0.1)",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: Spacing.lg,
-  },
-  uploadTitle: {
-    marginBottom: Spacing.sm,
-    color: Colors.dark.text,
+  infoBox: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: Spacing.md,
+    padding: Spacing.lg,
+    backgroundColor: Colors.dark.backgroundSecondary,
+    borderRadius: BorderRadius.sm,
+    marginBottom: Spacing.xl,
   },
   spacer: {
     flex: 1,
-    minHeight: Spacing["3xl"],
+    minHeight: Spacing.xl,
   },
   continueButton: {
     height: Spacing.buttonHeight,
@@ -264,9 +318,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   continueButtonDisabled: {
-    opacity: 0.5,
+    opacity: 0.6,
   },
   buttonText: {
     fontWeight: "600",
+  },
+  skipLink: {
+    alignItems: "center",
+    paddingVertical: Spacing.lg,
   },
 });

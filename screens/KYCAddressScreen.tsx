@@ -33,10 +33,10 @@ export default function KYCAddressScreen({ navigation }: KYCAddressScreenProps) 
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setStreet("123 Park Avenue");
-      setCity("New York");
-      setCountry("United States");
-      setPostalCode("10022");
+      setStreet("2800 Sand Hill Road");
+      setCity("Menlo Park");
+      setCountry("California, United States");
+      setPostalCode("94025");
       setIsDetecting(false);
     }, 2000);
     return () => clearTimeout(timer);
@@ -52,10 +52,10 @@ export default function KYCAddressScreen({ navigation }: KYCAddressScreenProps) 
   const handleComplete = () => {
     setUserData({
       address: { 
-        street: street || "123 Park Avenue", 
-        city: city || "New York", 
-        country: country || "United States", 
-        postalCode: postalCode || "10022" 
+        street: street || "2800 Sand Hill Road", 
+        city: city || "Menlo Park", 
+        country: country || "California, United States", 
+        postalCode: postalCode || "94025" 
       },
     });
     completeOnboarding();
