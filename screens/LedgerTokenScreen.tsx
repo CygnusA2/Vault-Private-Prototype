@@ -63,6 +63,11 @@ export default function LedgerTokenScreen() {
   const [tokenizationAsset, setTokenizationAsset] = useState({ name: "", value: 0 });
   const [tokensReady, setTokensReady] = useState(false);
   const [tokenAmount, setTokenAmount] = useState(0);
+  
+  const [showConversion, setShowConversion] = useState(false);
+  const [conversionProgress, setConversionProgress] = useState(0);
+  const [conversionType, setConversionType] = useState<"partially" | "entire">("entire");
+  const [convertedUSD, setConvertedUSD] = useState(0);
 
   const pulseAnim = useSharedValue(1);
 
@@ -121,52 +126,80 @@ export default function LedgerTokenScreen() {
   };
 
   const handleConvertAction = (type: "partially" | "entire") => {
-    const remainingProperty = property1Value + property2Value;
-    const totalInitial = INITIAL_PROPERTY1 + INITIAL_PROPERTY2;
-    const convertedAmount = totalInitial - remainingProperty;
+    const usdAmount = type === "entire" ? tokenAmount * 100 : Math.floor(tokenAmount * 50);
+    setConversionType(type);
+    setConvertedUSD(usdAmount);
+    setConversionProgress(0);
+    setShowConversion(true);
     
-    const property1ConvertedAmount = INITIAL_PROPERTY1 - property1Value;
-    const property2ConvertedAmount = INITIAL_PROPERTY2 - property2Value;
+    const stages = [
+      { progress: 15, delay: 800 },
+      { progress: 35, delay: 1200 },
+      { progress: 55, delay: 1000 },
+      { progress: 75, delay: 1200 },
+      { progress: 90, delay: 800 },
+      { progress: 100, delay: 600 },
+    ];
     
-    if (type === "entire") {
-      setConvertedAmounts({
-        convertedCash: convertedAmount,
-        remainingAmount: remainingProperty,
-        property1Remaining: property1Value,
-        property1Converted: property1ConvertedAmount,
-        property2Remaining: property2Value,
-        property2Converted: property2ConvertedAmount,
-      });
-      setTransformed1("");
-      setTransformed2("");
-      setTransformed1Raw(0);
-      setTransformed2Raw(0);
-    } else {
-      const partialAmount = Math.floor(convertedAmount / 2);
-      const partialRemaining = convertedAmount - partialAmount;
-      setConvertedAmounts({
-        convertedCash: partialAmount,
-        remainingAmount: remainingProperty + partialRemaining,
-        property1Remaining: property1Value + partialRemaining,
-        property1Converted: Math.floor(property1ConvertedAmount / 2),
-        property2Remaining: property2Value,
-        property2Converted: Math.floor(property2ConvertedAmount / 2),
-      });
-      if (partialRemaining > 0) {
-        setTransformed1(formatNumber(partialRemaining));
-        setTransformed1Raw(partialRemaining);
-        setProperty1Value(property1Value);
-      } else {
+    let totalDelay = 0;
+    stages.forEach((stage) => {
+      totalDelay += stage.delay;
+      setTimeout(() => {
+        setConversionProgress(stage.progress);
+      }, totalDelay);
+    });
+    
+    setTimeout(() => {
+      const remainingProperty = property1Value + property2Value;
+      const totalInitial = INITIAL_PROPERTY1 + INITIAL_PROPERTY2;
+      const convertedAmount = totalInitial - remainingProperty;
+      
+      const property1ConvertedAmount = INITIAL_PROPERTY1 - property1Value;
+      const property2ConvertedAmount = INITIAL_PROPERTY2 - property2Value;
+      
+      if (type === "entire") {
+        setConvertedAmounts({
+          convertedCash: convertedAmount,
+          remainingAmount: remainingProperty,
+          property1Remaining: property1Value,
+          property1Converted: property1ConvertedAmount,
+          property2Remaining: property2Value,
+          property2Converted: property2ConvertedAmount,
+        });
         setTransformed1("");
+        setTransformed2("");
         setTransformed1Raw(0);
+        setTransformed2Raw(0);
+      } else {
+        const partialAmount = Math.floor(convertedAmount / 2);
+        const partialRemaining = convertedAmount - partialAmount;
+        setConvertedAmounts({
+          convertedCash: partialAmount,
+          remainingAmount: remainingProperty + partialRemaining,
+          property1Remaining: property1Value + partialRemaining,
+          property1Converted: Math.floor(property1ConvertedAmount / 2),
+          property2Remaining: property2Value,
+          property2Converted: Math.floor(property2ConvertedAmount / 2),
+        });
+        if (partialRemaining > 0) {
+          setTransformed1(formatNumber(partialRemaining));
+          setTransformed1Raw(partialRemaining);
+          setProperty1Value(property1Value);
+        } else {
+          setTransformed1("");
+          setTransformed1Raw(0);
+        }
+        setTransformed2("");
+        setTransformed2Raw(0);
       }
-      setTransformed2("");
-      setTransformed2Raw(0);
-    }
-    
-    setShowConvertHighlight(false);
-    setConversionDone(true);
-    setShowOptimusHighlight(true);
+      
+      setTimeout(() => {
+        setShowConversion(false);
+        setShowConvertHighlight(false);
+        setConversionDone(true);
+        setShowOptimusHighlight(true);
+      }, 1500);
+    }, totalDelay + 500);
   };
 
   const handleOptimusPress = () => {
@@ -465,6 +498,103 @@ export default function LedgerTokenScreen() {
         }}
         onClose={() => setShowTokenization(false)}
       />
+
+      {showConversion ? (
+        <View style={styles.conversionOverlay}>
+          <View style={styles.conversionModal}>
+            <LinearGradient
+              colors={["rgba(13, 54, 18, 0.98)", "rgba(20, 70, 30, 0.95)"]}
+              style={styles.conversionGradient}
+            >
+              <View style={styles.conversionHeader}>
+                <View style={styles.conversionIconContainer}>
+                  <Feather name="refresh-cw" size={28} color="#4ade80" />
+                </View>
+                <ThemedText style={styles.conversionTitle}>
+                  Converting to USD
+                </ThemedText>
+                <ThemedText style={styles.conversionSubtitle}>
+                  {conversionType === "entire" ? "100% Conversion" : "50% Partial Conversion"}
+                </ThemedText>
+              </View>
+
+              <View style={styles.conversionAmounts}>
+                <View style={styles.conversionFromTo}>
+                  <View style={styles.conversionAmount}>
+                    <ThemedText style={styles.conversionLabel}>From Tokens</ThemedText>
+                    <ThemedText style={styles.conversionValue}>
+                      {(conversionType === "entire" ? tokenAmount : Math.floor(tokenAmount / 2)).toLocaleString()} VLT-RE
+                    </ThemedText>
+                  </View>
+                  <Feather name="arrow-right" size={24} color="#4ade80" />
+                  <View style={styles.conversionAmount}>
+                    <ThemedText style={styles.conversionLabel}>To USD Cash</ThemedText>
+                    <ThemedText style={styles.conversionValueUSD}>
+                      ${convertedUSD.toLocaleString()}
+                    </ThemedText>
+                  </View>
+                </View>
+              </View>
+
+              <View style={styles.conversionProgressContainer}>
+                <View style={styles.conversionProgressBar}>
+                  <View 
+                    style={[
+                      styles.conversionProgressFill, 
+                      { width: `${conversionProgress}%` }
+                    ]} 
+                  />
+                </View>
+                <ThemedText style={styles.conversionProgressText}>
+                  {conversionProgress}%
+                </ThemedText>
+              </View>
+
+              <View style={styles.conversionSteps}>
+                <View style={[styles.conversionStep, conversionProgress >= 15 && styles.conversionStepActive]}>
+                  <Feather name={conversionProgress >= 15 ? "check-circle" : "circle"} size={16} color={conversionProgress >= 15 ? "#4ade80" : "#666"} />
+                  <ThemedText style={[styles.conversionStepText, conversionProgress >= 15 && styles.conversionStepTextActive]}>
+                    Validating tokens
+                  </ThemedText>
+                </View>
+                <View style={[styles.conversionStep, conversionProgress >= 35 && styles.conversionStepActive]}>
+                  <Feather name={conversionProgress >= 35 ? "check-circle" : "circle"} size={16} color={conversionProgress >= 35 ? "#4ade80" : "#666"} />
+                  <ThemedText style={[styles.conversionStepText, conversionProgress >= 35 && styles.conversionStepTextActive]}>
+                    Calculating exchange rate
+                  </ThemedText>
+                </View>
+                <View style={[styles.conversionStep, conversionProgress >= 55 && styles.conversionStepActive]}>
+                  <Feather name={conversionProgress >= 55 ? "check-circle" : "circle"} size={16} color={conversionProgress >= 55 ? "#4ade80" : "#666"} />
+                  <ThemedText style={[styles.conversionStepText, conversionProgress >= 55 && styles.conversionStepTextActive]}>
+                    Processing conversion
+                  </ThemedText>
+                </View>
+                <View style={[styles.conversionStep, conversionProgress >= 75 && styles.conversionStepActive]}>
+                  <Feather name={conversionProgress >= 75 ? "check-circle" : "circle"} size={16} color={conversionProgress >= 75 ? "#4ade80" : "#666"} />
+                  <ThemedText style={[styles.conversionStepText, conversionProgress >= 75 && styles.conversionStepTextActive]}>
+                    Transferring funds
+                  </ThemedText>
+                </View>
+                <View style={[styles.conversionStep, conversionProgress >= 100 && styles.conversionStepActive]}>
+                  <Feather name={conversionProgress >= 100 ? "check-circle" : "circle"} size={16} color={conversionProgress >= 100 ? "#4ade80" : "#666"} />
+                  <ThemedText style={[styles.conversionStepText, conversionProgress >= 100 && styles.conversionStepTextActive]}>
+                    Conversion complete
+                  </ThemedText>
+                </View>
+              </View>
+
+              {conversionProgress >= 100 ? (
+                <View style={styles.conversionComplete}>
+                  <Feather name="check-circle" size={32} color="#4ade80" />
+                  <ThemedText style={styles.conversionCompleteText}>
+                    ${convertedUSD.toLocaleString()} USD added to your account
+                  </ThemedText>
+                </View>
+              ) : null}
+            </LinearGradient>
+          </View>
+        </View>
+      ) : null}
     </AuthScreenScrollView>
   );
 }
@@ -847,5 +977,140 @@ const styles = StyleSheet.create({
     fontWeight: "400",
     color: "#E8D5B7",
     letterSpacing: 0.3,
+  },
+  conversionOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.85)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 1000,
+  },
+  conversionModal: {
+    width: "90%",
+    maxWidth: 380,
+    borderRadius: BorderRadius.xl,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(74, 222, 128, 0.3)",
+  },
+  conversionGradient: {
+    padding: Spacing.xl,
+  },
+  conversionHeader: {
+    alignItems: "center",
+    marginBottom: Spacing.xl,
+  },
+  conversionIconContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "rgba(74, 222, 128, 0.15)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: Spacing.md,
+  },
+  conversionTitle: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: "#E8D5B7",
+    letterSpacing: 0.5,
+    marginBottom: Spacing.xs,
+  },
+  conversionSubtitle: {
+    fontSize: 14,
+    fontWeight: "400",
+    color: "#A8C4B5",
+  },
+  conversionAmounts: {
+    marginBottom: Spacing.xl,
+  },
+  conversionFromTo: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "rgba(0, 0, 0, 0.2)",
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.lg,
+  },
+  conversionAmount: {
+    alignItems: "center",
+    flex: 1,
+  },
+  conversionLabel: {
+    fontSize: 11,
+    fontWeight: "400",
+    color: "#A8C4B5",
+    marginBottom: Spacing.xs,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  conversionValue: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#E8D5B7",
+  },
+  conversionValueUSD: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#4ade80",
+  },
+  conversionProgressContainer: {
+    marginBottom: Spacing.lg,
+  },
+  conversionProgressBar: {
+    height: 8,
+    backgroundColor: "rgba(0, 0, 0, 0.3)",
+    borderRadius: 4,
+    overflow: "hidden",
+    marginBottom: Spacing.sm,
+  },
+  conversionProgressFill: {
+    height: "100%",
+    backgroundColor: "#4ade80",
+    borderRadius: 4,
+  },
+  conversionProgressText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#4ade80",
+    textAlign: "center",
+  },
+  conversionSteps: {
+    gap: Spacing.sm,
+    marginBottom: Spacing.lg,
+  },
+  conversionStep: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+    opacity: 0.5,
+  },
+  conversionStepActive: {
+    opacity: 1,
+  },
+  conversionStepText: {
+    fontSize: 13,
+    fontWeight: "400",
+    color: "#666",
+  },
+  conversionStepTextActive: {
+    color: "#E8D5B7",
+  },
+  conversionComplete: {
+    alignItems: "center",
+    gap: Spacing.md,
+    paddingTop: Spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(74, 222, 128, 0.2)",
+  },
+  conversionCompleteText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#4ade80",
+    textAlign: "center",
   },
 });
