@@ -368,8 +368,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginTop: Spacing.lg,
-    gap: Spacing.sm,
+    marginTop: Spacing.xs,
+    gap: 4,
   },
   poweredByText: {
     color: Colors.dark.textTertiary,
