@@ -297,10 +297,12 @@ export default function WelcomeScreen({ navigation }: WelcomeScreenProps) {
               </ThemedText>
             </View>
 
-            <View style={styles.typewriterContainer}>
-              <ThemedText style={styles.typewriterText}>
-                {typewriterText}
-              </ThemedText>
+            <View style={styles.typewriterWrapper}>
+              <View style={styles.typewriterContainer}>
+                <ThemedText style={styles.typewriterText}>
+                  {typewriterText}
+                </ThemedText>
+              </View>
             </View>
           </Animated.View>
         ) : (
@@ -517,10 +519,12 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.xs,
     alignItems: "center",
   },
+  typewriterWrapper: {
+    flex: 1,
+    justifyContent: "center",
+  },
   typewriterContainer: {
-    marginTop: Spacing.xl,
     paddingHorizontal: Spacing.sm,
-    minHeight: 120,
   },
   typewriterText: {
     fontSize: 15,
