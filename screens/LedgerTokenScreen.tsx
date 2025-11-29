@@ -252,7 +252,7 @@ export default function LedgerTokenScreen() {
           <ThemedText style={styles.sectionButtonText}>Transform</ThemedText>
           {(transformed1Raw > 0 || transformed2Raw > 0) ? (
             <View style={styles.transformReadyBadge}>
-              <Feather name="zap" size={12} color="#0d3612" />
+              <Feather name="zap" size={14} color="#ffffff" />
             </View>
           ) : null}
         </Pressable>
@@ -570,12 +570,14 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   transformReadyBadge: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: "rgba(0, 0, 0, 0.2)",
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "rgba(13, 54, 18, 0.9)",
     justifyContent: "center",
     alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.3)",
   },
   propertySection: {
     gap: Spacing.xl,
