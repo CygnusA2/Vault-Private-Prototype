@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { View, StyleSheet, Pressable } from "react-native";
+import { View, StyleSheet, Pressable, Platform } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import Animated, {
   FadeIn,
@@ -48,16 +48,16 @@ export default function IntroScreen({ navigation }: IntroScreenProps) {
         setDisplayedText(INTRO_TEXT.substring(0, charIndexRef.current + 1));
         charIndexRef.current++;
 
-        let delay = 45 + Math.random() * 35;
+        let delay = 120 + Math.random() * 80;
         
         if (nextChar === "." || nextChar === ",") {
-          delay = 300 + Math.random() * 400;
+          delay = 800 + Math.random() * 600;
         } else if (nextChar === "\n") {
-          delay = 600 + Math.random() * 300;
-        } else if (Math.random() < 0.08) {
-          delay = 200 + Math.random() * 300;
-        } else if (Math.random() < 0.03) {
-          delay = 400 + Math.random() * 200;
+          delay = 1200 + Math.random() * 500;
+        } else if (Math.random() < 0.12) {
+          delay = 500 + Math.random() * 400;
+        } else if (Math.random() < 0.05) {
+          delay = 800 + Math.random() * 400;
         }
 
         setTimeout(typeNextChar, delay);
@@ -65,11 +65,11 @@ export default function IntroScreen({ navigation }: IntroScreenProps) {
         setTimeout(() => {
           setIsComplete(true);
           setShowCursor(false);
-        }, 800);
+        }, 1500);
       }
     };
 
-    const initialDelay = setTimeout(typeNextChar, 1000);
+    const initialDelay = setTimeout(typeNextChar, 1500);
     return () => clearTimeout(initialDelay);
   }, []);
 
@@ -136,15 +136,25 @@ const styles = StyleSheet.create({
   },
   introText: {
     fontSize: 22,
-    lineHeight: 34,
+    lineHeight: 38,
     color: Colors.dark.primary,
-    fontWeight: "300",
-    letterSpacing: 0.3,
+    fontWeight: "400",
+    letterSpacing: 0.5,
     textAlign: "center",
+    fontFamily: Platform.select({
+      ios: "Baskerville",
+      android: "serif",
+      default: "Georgia, Times New Roman, serif",
+    }),
   },
   cursor: {
     color: Colors.dark.primary,
-    fontWeight: "200",
+    fontWeight: "300",
+    fontFamily: Platform.select({
+      ios: "Baskerville",
+      android: "serif", 
+      default: "Georgia, Times New Roman, serif",
+    }),
   },
   continueHint: {
     position: "absolute",
