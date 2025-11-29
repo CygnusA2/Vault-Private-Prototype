@@ -155,6 +155,14 @@ export default function WelcomeScreen({ navigation }: WelcomeScreenProps) {
     }, 1000);
   };
 
+  const handleAutoFillCode = () => {
+    const demoCode = "123456".split("");
+    setCode(demoCode);
+    setTimeout(() => {
+      verifyCode("123456");
+    }, 300);
+  };
+
   return (
     <View style={styles.container}>
       <LinearGradient
@@ -296,12 +304,6 @@ export default function WelcomeScreen({ navigation }: WelcomeScreenProps) {
               </ThemedText>
             </AnimatedPressable>
 
-            <View style={styles.demoHint}>
-              <ThemedText type="small" style={{ color: Colors.dark.textTertiary }}>
-                Demo: Use code 123456 when prompted
-              </ThemedText>
-            </View>
-
             <View style={styles.typewriterWrapper}>
               <View style={styles.typewriterContainer}>
                 <ThemedText style={styles.typewriterText}>
@@ -373,6 +375,18 @@ export default function WelcomeScreen({ navigation }: WelcomeScreenProps) {
                 Change phone number
               </ThemedText>
             </Pressable>
+
+            <View style={styles.codeButtonWrapper}>
+              <Pressable
+                style={styles.autoFillCodeButton}
+                onPress={handleAutoFillCode}
+                disabled={isVerifying}
+              >
+                <ThemedText style={styles.autoFillCodeText}>
+                  123456
+                </ThemedText>
+              </Pressable>
+            </View>
           </Animated.View>
         )}
       </View>
@@ -517,13 +531,6 @@ const styles = StyleSheet.create({
   buttonText: {
     fontWeight: "600",
   },
-  demoHint: {
-    marginTop: Spacing.xl,
-    padding: Spacing.md,
-    backgroundColor: Colors.dark.backgroundSecondary,
-    borderRadius: BorderRadius.xs,
-    alignItems: "center",
-  },
   typewriterWrapper: {
     flex: 1,
     justifyContent: "center",
@@ -582,5 +589,25 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: Spacing.sm,
     paddingVertical: Spacing.lg,
+  },
+  codeButtonWrapper: {
+    flex: 1,
+    justifyContent: "flex-end",
+    alignItems: "center",
+    paddingBottom: Spacing.xl,
+  },
+  autoFillCodeButton: {
+    backgroundColor: Colors.dark.backgroundSecondary,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.xl,
+    borderRadius: BorderRadius.sm,
+    borderWidth: 1,
+    borderColor: Colors.dark.border,
+  },
+  autoFillCodeText: {
+    fontSize: 24,
+    fontWeight: "600",
+    color: Colors.dark.primary,
+    letterSpacing: 8,
   },
 });
