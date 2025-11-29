@@ -33,10 +33,10 @@ export default function KYCAddressScreen({ navigation }: KYCAddressScreenProps) 
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setStreet("2800 Sand Hill Road");
-      setCity("Menlo Park");
+      setStreet("9876 Wilshire Boulevard");
+      setCity("Beverly Hills");
       setCountry("California, United States");
-      setPostalCode("94025");
+      setPostalCode("90210");
       setIsDetecting(false);
     }, 2000);
     return () => clearTimeout(timer);
@@ -52,10 +52,10 @@ export default function KYCAddressScreen({ navigation }: KYCAddressScreenProps) 
   const handleComplete = () => {
     setUserData({
       address: { 
-        street: street || "2800 Sand Hill Road", 
-        city: city || "Menlo Park", 
+        street: street || "9876 Wilshire Boulevard", 
+        city: city || "Beverly Hills", 
         country: country || "California, United States", 
-        postalCode: postalCode || "94025" 
+        postalCode: postalCode || "90210" 
       },
     });
     completeOnboarding();
