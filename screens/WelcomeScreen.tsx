@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { View, StyleSheet, Image, Pressable, TextInput } from "react-native";
+import { View, StyleSheet, Image, Pressable, TextInput, Platform } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -17,6 +17,8 @@ import { ThemedText } from "@/components/ThemedText";
 import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import { AuthStackParamList } from "@/navigation/AuthStackNavigator";
 import { useAuth } from "@/context/AuthContext";
+
+const TYPEWRITER_TEXT = `Vault Private isn't just about speed—it's about control. Real wealth isn't just accessible; it's protected. Your assets. Your terms. Your timeline. Only you decide when capital moves.`;
 
 type WelcomeScreenProps = {
   navigation: NativeStackNavigationProp<AuthStackParamList, "Welcome">;
@@ -49,6 +51,40 @@ export default function WelcomeScreen({ navigation }: WelcomeScreenProps) {
   const inputRefs = useRef<(TextInput | null)[]>([]);
   const buttonScale = useSharedValue(1);
   const shakeAnim = useSharedValue(0);
+  
+  const [typewriterText, setTypewriterText] = useState("");
+  const charIndexRef = useRef(0);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    const typeNextChar = () => {
+      if (charIndexRef.current < TYPEWRITER_TEXT.length) {
+        const nextChar = TYPEWRITER_TEXT[charIndexRef.current];
+        setTypewriterText(TYPEWRITER_TEXT.substring(0, charIndexRef.current + 1));
+        charIndexRef.current++;
+
+        let delay = 95 + Math.random() * 60;
+        
+        if (nextChar === "." || nextChar === ",") {
+          delay = 650 + Math.random() * 450;
+        } else if (nextChar === "—") {
+          delay = 400 + Math.random() * 200;
+        } else if (Math.random() < 0.10) {
+          delay = 400 + Math.random() * 300;
+        }
+
+        timeoutRef.current = setTimeout(typeNextChar, delay);
+      }
+    };
+
+    timeoutRef.current = setTimeout(typeNextChar, 2000);
+    
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   const buttonAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: buttonScale.value }],
@@ -258,6 +294,12 @@ export default function WelcomeScreen({ navigation }: WelcomeScreenProps) {
             <View style={styles.demoHint}>
               <ThemedText type="small" style={{ color: Colors.dark.textTertiary }}>
                 Demo: Use code 123456 when prompted
+              </ThemedText>
+            </View>
+
+            <View style={styles.typewriterContainer}>
+              <ThemedText style={styles.typewriterText}>
+                {typewriterText}
               </ThemedText>
             </View>
           </Animated.View>
@@ -474,6 +516,24 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.dark.backgroundSecondary,
     borderRadius: BorderRadius.xs,
     alignItems: "center",
+  },
+  typewriterContainer: {
+    marginTop: Spacing.xl,
+    paddingHorizontal: Spacing.sm,
+    minHeight: 120,
+  },
+  typewriterText: {
+    fontSize: 15,
+    lineHeight: 26,
+    color: Colors.dark.primary,
+    fontWeight: "400",
+    letterSpacing: 0.3,
+    textAlign: "center",
+    fontFamily: Platform.select({
+      ios: "Baskerville",
+      android: "serif",
+      default: "Georgia, Times New Roman, serif",
+    }),
   },
   codeContainer: {
     flexDirection: "row",
