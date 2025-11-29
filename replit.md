@@ -3,17 +3,28 @@
 ## Overview
 A proof-of-concept mobile app prototype for a proprietary authenticator and private banking experience designed for ultra-high net worth clients. This prototype demonstrates the complete transaction flow for investor and client presentations.
 
-**Status**: Full-stack application with Node.js/TypeScript backend API
+**Status**: Full-stack application with Node.js/TypeScript backend API and live third-party integrations
 
 ## Recent Changes
-- November 28, 2025: Added Node.js/TypeScript backend API server
+- November 29, 2025: Enhanced Canton Network with polished demo simulation (staged tokenization progress)
+- November 29, 2025: Added Stewart Title real API integration (title search, escrow, insurance quotes)
+- November 29, 2025: Added Wolters Kluwer real API integration (lien search, UCC filings)
+- November 29, 2025: New tokenization status polling endpoint for frontend progress display
+- November 28, 2025: OpenAI integration live (AI asset verification, portfolio analysis)
+- November 28, 2025: DocuSign integration live (digital signatures for KYC, loan agreements)
 - Backend API with modular architecture for third-party integrations
 - Security middleware (JWT auth, rate limiting, input sanitization)
-- Placeholder modules for DocuSign, OpenAI, Canton Network, Stewart Title, Wolters Kluwer
 - Initial prototype created with custom gold/dark luxury theme
-- Complete authentication flow with SMS verification simulation
-- KYC onboarding with 5-step progressive disclosure
-- Transaction flow: Pre-Approve → Illiquid Assets → LedgerToken → Optimus → Dashboard
+
+## Integration Status
+
+| Integration | Status | Capabilities |
+|-------------|--------|--------------|
+| **OpenAI** | LIVE | AI asset verification, portfolio analysis, wealth advisor chat |
+| **DocuSign** | LIVE | Digital signatures for KYC, loan agreements, tokenization consent |
+| **Stewart Title** | READY | Title search, escrow services, insurance quotes (add API key to enable) |
+| **Wolters Kluwer** | READY | Lien searches, UCC filings, risk assessment (add API key to enable) |
+| **Canton Network** | DEMO | Polished simulation with realistic timing, staged progress, blockchain-like IDs |
 
 ## Project Architecture
 
@@ -74,20 +85,21 @@ A proof-of-concept mobile app prototype for a proprietary authenticator and priv
     │   │       ├── auth.ts    # Authentication endpoints
     │   │       ├── kyc.ts     # KYC/compliance endpoints
     │   │       ├── documents.ts # DocuSign integration
-    │   │       ├── assets.ts  # Asset/tokenization endpoints
+    │   │       ├── assets.ts  # Asset/tokenization/title/lien endpoints
     │   │       └── liquidity.ts # Lender syndicate endpoints
     │   └── modules/
-    │       ├── docusign/      # DocuSign API integration
-    │       ├── openai/        # OpenAI AI agent integration
-    │       ├── canton/        # Canton Network blockchain
-    │       ├── stewart/       # Stewart Title services
-    │       ├── wolters/       # Wolters Kluwer lien services
+    │       ├── docusign/      # DocuSign eSignature API (LIVE)
+    │       ├── openai/        # OpenAI GPT-4 integration (LIVE)
+    │       ├── canton/        # Canton Network simulation (DEMO)
+    │       ├── stewart/       # Stewart Title API (READY)
+    │       ├── wolters/       # Wolters Kluwer Lien Services (READY)
     │       └── lenders/       # Private credit syndicate
     └── .env.example           # Environment variables template
 ```
 
 ## Backend API Endpoints
 
+### Health & Auth
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/api/health` | GET | Server health check |
@@ -95,28 +107,74 @@ A proof-of-concept mobile app prototype for a proprietary authenticator and priv
 | `/api/auth/session` | POST | Create session (SMS verification) |
 | `/api/auth/device-attestation` | POST | Device verification |
 | `/api/auth/me` | GET | Get current user |
+
+### KYC & Compliance
+| Endpoint | Method | Description |
+|----------|--------|-------------|
 | `/api/kyc/status` | GET | KYC verification status |
 | `/api/kyc/submit` | POST | Submit KYC data |
 | `/api/kyc/compliance-check` | POST | Run Dow Jones/LSEG checks |
+
+### Documents (DocuSign)
+| Endpoint | Method | Description |
+|----------|--------|-------------|
 | `/api/documents/sign` | POST | Initiate DocuSign envelope |
 | `/api/documents/status/:id` | GET | Check document status |
-| `/api/assets/verify` | POST | AI-powered asset verification |
-| `/api/assets/tokenize` | POST | Tokenize asset on Canton |
+
+### Assets & Tokenization
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/assets/verify` | POST | AI-powered asset verification (OpenAI) |
+| `/api/assets/tokenize` | POST | Initiate tokenization (staged demo) |
+| `/api/assets/tokenization/:id/status` | GET | Poll tokenization progress |
 | `/api/assets/portfolio` | GET | Get user portfolio |
+| `/api/assets/tokens` | GET | Get token balances |
+| `/api/assets/transactions` | GET | Transaction history |
+| `/api/assets/title-search` | POST | Stewart Title search |
+| `/api/assets/lien-search` | POST | Wolters Kluwer lien search |
+
+### Liquidity
+| Endpoint | Method | Description |
+|----------|--------|-------------|
 | `/api/liquidity/offers` | GET | Get lender offers |
 | `/api/liquidity/request` | POST | Request liquidity |
 | `/api/liquidity/drawdown` | POST | Initiate drawdown |
 
+## Canton Network Tokenization Flow (Demo)
+
+The tokenization demo provides a polished, realistic simulation for investor presentations:
+
+1. **Initiate** - POST to `/api/assets/tokenize` returns `transactionId`
+2. **Poll** - GET `/api/assets/tokenization/:transactionId/status` for progress
+3. **Stages** (automatic progression over ~30 seconds):
+   - `pending` (0%) - Initializing request
+   - `validating` (15-45%) - Verifying ownership, title, liens
+   - `tokenizing` (55-75%) - Smart contract deployment, minting
+   - `confirming` (85-95%) - Network consensus
+   - `confirmed` (100%) - Complete with blockchain data
+
+Response includes authentic-looking:
+- Canton transaction IDs (`CANTON_K8X2M_A7B3`)
+- Contract addresses (`0x...`)
+- Block numbers, gas used, merkle proofs
+- Token metadata and compliance checks
+
 ## Environment Variables
 
-Copy `server/.env.example` to configure:
-- `API_PORT` - Backend port (default: 8080)
+**Required (in Secrets tab):**
+- `DOCUSIGN_API_KEY` - DocuSign Integration Key
+- `DOCUSIGN_ACCOUNT_ID` - DocuSign Account ID
+- `OPENAI_API_KEY` - OpenAI API Key
+
+**Optional (add to enable real APIs):**
+- `STEWART_API_KEY` - Stewart Title API Key
+- `STEWART_API_URL` - Stewart Title base URL
+- `WOLTERS_KLUWER_API_KEY` - Wolters Kluwer API Key
+- `WOLTERS_KLUWER_API_URL` - Wolters Kluwer base URL
+
+**System:**
 - `JWT_SECRET` - Token signing secret
-- `DOCUSIGN_API_KEY` - DocuSign integration
-- `OPENAI_API_KEY` - OpenAI for AI agents
-- `CANTON_API_KEY` - Canton Network
-- `STEWART_API_KEY` - Stewart Title
-- `WOLTERS_KLUWER_API_KEY` - Wolters Kluwer
+- `API_PORT` - Backend port (default: 8080)
 
 ## Demo Credentials
 - **SMS Code**: Enter `123456` to proceed through verification
@@ -133,18 +191,20 @@ Copy `server/.env.example` to configure:
 
 ## Production Roadmap
 
-### Phase 1: Foundation (Identity & Documents)
+### Phase 1: Foundation (COMPLETE)
 - DocuSign - Digital signatures for KYC, loan agreements
 - OpenAI - AI agents for asset verification
-- Cloudflare - Security, WAF, zero-trust ($5K credits available)
 
-### Phase 2: Asset Verification
-- Stewart Title - Real estate title verification
-- Wolters Kluwer - Lien searches, UCC filings
+### Phase 2: Asset Verification (READY)
+- Stewart Title - Real estate title verification (add API key)
+- Wolters Kluwer - Lien searches, UCC filings (add API key)
 
 ### Phase 3: Tokenization & Liquidity
-- Canton Network - Blockchain tokenization
+- Canton Network - Live blockchain (when ready for production)
 - Private Credit Syndicate APIs - Lender connectivity
+
+### Infrastructure
+- Cloudflare - Security, WAF, zero-trust ($5K credits available)
 
 ## Security Considerations
 - JWT-based authentication with token refresh
