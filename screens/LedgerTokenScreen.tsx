@@ -14,6 +14,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { AuthScreenScrollView } from "@/components/AuthScreenScrollView";
 import { ThemedText } from "@/components/ThemedText";
+import { TokenizationProgress } from "@/components/TokenizationProgress";
 import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
 
@@ -57,6 +58,9 @@ export default function LedgerTokenScreen() {
   const [showConvertHighlight, setShowConvertHighlight] = useState(false);
   const [conversionDone, setConversionDone] = useState(false);
   const [showOptimusHighlight, setShowOptimusHighlight] = useState(false);
+  
+  const [showTokenization, setShowTokenization] = useState(false);
+  const [tokenizationAsset, setTokenizationAsset] = useState({ name: "", value: 0 });
 
   const pulseAnim = useSharedValue(1);
 
@@ -228,9 +232,30 @@ export default function LedgerTokenScreen() {
       </Animated.View>
 
       <Animated.View entering={FadeInDown.duration(400).delay(200)} style={styles.mainContent}>
-        <View style={styles.sectionButton}>
+        <Pressable 
+          style={styles.sectionButton}
+          onPress={() => {
+            const totalTransformed = transformed1Raw + transformed2Raw;
+            if (totalTransformed > 0) {
+              setTokenizationAsset({
+                name: transformed1Raw > 0 && transformed2Raw > 0 
+                  ? "Property 1 & 2 Portfolio" 
+                  : transformed1Raw > 0 
+                    ? "Property 1 - Beverly Hills Estate"
+                    : "Property 2 - Malibu Residence",
+                value: totalTransformed,
+              });
+              setShowTokenization(true);
+            }
+          }}
+        >
           <ThemedText style={styles.sectionButtonText}>Transform</ThemedText>
-        </View>
+          {(transformed1Raw > 0 || transformed2Raw > 0) ? (
+            <View style={styles.transformReadyBadge}>
+              <Feather name="zap" size={12} color="#0d3612" />
+            </View>
+          ) : null}
+        </Pressable>
 
         <View style={styles.propertySection}>
           <View style={styles.propertyRow}>
@@ -385,6 +410,17 @@ export default function LedgerTokenScreen() {
           </Animated.View>
         ) : null}
       </Animated.View>
+
+      <TokenizationProgress
+        isActive={showTokenization}
+        assetValue={tokenizationAsset.value}
+        assetName={tokenizationAsset.name}
+        onComplete={() => {
+          setShowTokenization(false);
+          setShowConvertHighlight(true);
+        }}
+        onClose={() => setShowTokenization(false)}
+      />
     </AuthScreenScrollView>
   );
 }
@@ -512,7 +548,10 @@ const styles = StyleSheet.create({
     gap: Spacing.lg,
   },
   sectionButton: {
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.sm,
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.xl,
     backgroundColor: "#4ade80",
@@ -529,6 +568,14 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#1a1a1a",
     letterSpacing: 1,
+  },
+  transformReadyBadge: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: "rgba(0, 0, 0, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   propertySection: {
     gap: Spacing.xl,
