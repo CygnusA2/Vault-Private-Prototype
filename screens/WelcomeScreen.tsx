@@ -152,6 +152,19 @@ export default function WelcomeScreen({ navigation }: WelcomeScreenProps) {
           >
             Exclusive banking for distinguished clients
           </ThemedText>
+          <View style={styles.poweredByContainer}>
+            <ThemedText
+              type="small"
+              style={styles.poweredByText}
+            >
+              Powered by
+            </ThemedText>
+            <Image
+              source={require("../assets/images/cygnus-logo.png")}
+              style={styles.cygnusLogo}
+              resizeMode="contain"
+            />
+          </View>
         </Animated.View>
 
         {step === "phone" ? (
@@ -352,6 +365,21 @@ const styles = StyleSheet.create({
   subtitle: {
     textAlign: "center",
     fontSize: 14,
+  },
+  poweredByContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: Spacing.lg,
+    gap: Spacing.sm,
+  },
+  poweredByText: {
+    color: Colors.dark.textTertiary,
+    fontSize: 12,
+  },
+  cygnusLogo: {
+    height: 16,
+    width: 80,
   },
   formContainer: {
     flex: 1,
