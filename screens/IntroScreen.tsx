@@ -48,16 +48,16 @@ export default function IntroScreen({ navigation }: IntroScreenProps) {
         setDisplayedText(INTRO_TEXT.substring(0, charIndexRef.current + 1));
         charIndexRef.current++;
 
-        let delay = 120 + Math.random() * 80;
+        let delay = 95 + Math.random() * 60;
         
         if (nextChar === "." || nextChar === ",") {
-          delay = 800 + Math.random() * 600;
+          delay = 650 + Math.random() * 450;
         } else if (nextChar === "\n") {
-          delay = 1200 + Math.random() * 500;
-        } else if (Math.random() < 0.12) {
-          delay = 500 + Math.random() * 400;
-        } else if (Math.random() < 0.05) {
-          delay = 800 + Math.random() * 400;
+          delay = 1000 + Math.random() * 400;
+        } else if (Math.random() < 0.10) {
+          delay = 400 + Math.random() * 300;
+        } else if (Math.random() < 0.04) {
+          delay = 650 + Math.random() * 300;
         }
 
         setTimeout(typeNextChar, delay);
