@@ -21,7 +21,6 @@ import { useAuth } from "@/context/AuthContext";
 const TYPEWRITER_TEXT = `POWERED BY CYGNUS-A²
 Vault Private: built to fortress your illiquid assets.
 Real wealth demands more than speed—it demands protection.
-
 Behind every access: enterprise-grade security.
 Every transaction: encrypted and verified.
 Your assets: shielded and safe.`;
