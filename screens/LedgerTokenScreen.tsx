@@ -61,11 +61,13 @@ export default function LedgerTokenScreen() {
   
   const [showTokenization, setShowTokenization] = useState(false);
   const [tokenizationAsset, setTokenizationAsset] = useState({ name: "", value: 0 });
+  const [tokensReady, setTokensReady] = useState(false);
+  const [tokenAmount, setTokenAmount] = useState(0);
 
   const pulseAnim = useSharedValue(1);
 
   useEffect(() => {
-    if (showConvertHighlight || showOptimusHighlight) {
+    if (showConvertHighlight || showOptimusHighlight || tokensReady) {
       pulseAnim.value = withRepeat(
         withSequence(
           withTiming(1.05, { duration: 600 }),
@@ -75,7 +77,7 @@ export default function LedgerTokenScreen() {
         true
       );
     }
-  }, [showConvertHighlight, showOptimusHighlight]);
+  }, [showConvertHighlight, showOptimusHighlight, tokensReady]);
 
   const pulseStyle = useAnimatedStyle(() => ({
     transform: [{ scale: pulseAnim.value }],
@@ -335,20 +337,28 @@ export default function LedgerTokenScreen() {
         <Animated.View entering={FadeInDown.duration(400).delay(300)} style={styles.actionGrid}>
           <View style={styles.actionGridRow}>
             <AnimatedPressable
-              onPress={() => handleConvertAction("partially")}
+              onPress={() => {
+                handleConvertAction("partially");
+                setTokensReady(false);
+              }}
               style={[
                 styles.actionButton,
-                showConvertHighlight && styles.actionButtonHighlighted,
-                showConvertHighlight && pulseStyle,
+                (showConvertHighlight || tokensReady) && styles.actionButtonHighlighted,
+                (showConvertHighlight || tokensReady) && pulseStyle,
               ]}
             >
+              {tokensReady ? (
+                <View style={styles.tokenConvertIcon}>
+                  <Feather name="pie-chart" size={14} color="#1a1a1a" />
+                </View>
+              ) : null}
               <ThemedText style={[
                 styles.actionButtonText,
-                showConvertHighlight && styles.actionButtonTextHighlighted
+                (showConvertHighlight || tokensReady) && styles.actionButtonTextHighlighted
               ]}>
                 Partially
               </ThemedText>
-              {showConvertHighlight ? (
+              {showConvertHighlight && !tokensReady ? (
                 <View style={styles.highlightIndicator}>
                   <Feather name="edit-3" size={10} color="#1a1a1a" />
                 </View>
@@ -356,20 +366,28 @@ export default function LedgerTokenScreen() {
             </AnimatedPressable>
             
             <AnimatedPressable
-              onPress={() => handleConvertAction("entire")}
+              onPress={() => {
+                handleConvertAction("entire");
+                setTokensReady(false);
+              }}
               style={[
                 styles.actionButton,
-                showConvertHighlight && styles.actionButtonHighlighted,
-                showConvertHighlight && pulseStyle,
+                (showConvertHighlight || tokensReady) && styles.actionButtonHighlighted,
+                (showConvertHighlight || tokensReady) && pulseStyle,
               ]}
             >
+              {tokensReady ? (
+                <View style={styles.tokenConvertIcon}>
+                  <Feather name="dollar-sign" size={14} color="#1a1a1a" />
+                </View>
+              ) : null}
               <ThemedText style={[
                 styles.actionButtonText,
-                showConvertHighlight && styles.actionButtonTextHighlighted
+                (showConvertHighlight || tokensReady) && styles.actionButtonTextHighlighted
               ]}>
                 Entire Amount
               </ThemedText>
-              {showConvertHighlight ? (
+              {showConvertHighlight && !tokensReady ? (
                 <View style={styles.highlightIndicator}>
                   <Feather name="edit-3" size={10} color="#1a1a1a" />
                 </View>
@@ -392,7 +410,31 @@ export default function LedgerTokenScreen() {
           </View>
         </Animated.View>
 
-        {showConvertHighlight ? (
+        {tokensReady ? (
+          <Animated.View entering={FadeIn.duration(300)} style={styles.tokensReadyContainer}>
+            <View style={styles.tokensReadyHeader}>
+              <Feather name="check-circle" size={18} color="#4ade80" />
+              <ThemedText style={styles.tokensReadyTitle}>
+                {tokenAmount.toLocaleString()} VLT-RE Tokens Ready
+              </ThemedText>
+            </View>
+            <ThemedText style={styles.tokensReadySubtext}>
+              Convert your tokens to USD cash
+            </ThemedText>
+            <View style={styles.conversionOptionsRow}>
+              <View style={styles.conversionOption}>
+                <Feather name="pie-chart" size={16} color="#4ade80" />
+                <ThemedText style={styles.conversionOptionText}>Partially - Convert 50%</ThemedText>
+              </View>
+              <View style={styles.conversionOption}>
+                <Feather name="dollar-sign" size={16} color="#4ade80" />
+                <ThemedText style={styles.conversionOptionText}>Entire - Convert 100%</ThemedText>
+              </View>
+            </View>
+          </Animated.View>
+        ) : null}
+
+        {showConvertHighlight && !tokensReady ? (
           <Animated.View entering={FadeIn.duration(300)} style={styles.hintContainer}>
             <Feather name="arrow-up" size={14} color="#4ade80" />
             <ThemedText style={styles.hintText}>
@@ -417,7 +459,9 @@ export default function LedgerTokenScreen() {
         assetName={tokenizationAsset.name}
         onComplete={() => {
           setShowTokenization(false);
-          setShowConvertHighlight(true);
+          setTokensReady(true);
+          setTokenAmount(Math.floor(tokenizationAsset.value / 100));
+          setShowConvertHighlight(false);
         }}
         onClose={() => setShowTokenization(false)}
       />
@@ -747,5 +791,61 @@ const styles = StyleSheet.create({
     color: "#4ade80",
     textAlign: "center",
     flex: 1,
+  },
+  tokenConvertIcon: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: "rgba(0, 0, 0, 0.15)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  tokensReadyContainer: {
+    backgroundColor: "rgba(74, 222, 128, 0.12)",
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    borderColor: "rgba(74, 222, 128, 0.3)",
+    padding: Spacing.lg,
+    marginTop: Spacing.lg,
+    gap: Spacing.sm,
+  },
+  tokensReadyHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.sm,
+  },
+  tokensReadyTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#4ade80",
+    letterSpacing: 0.5,
+  },
+  tokensReadySubtext: {
+    fontSize: 13,
+    fontWeight: "400",
+    color: "#A8C4B5",
+    textAlign: "center",
+    marginBottom: Spacing.sm,
+  },
+  conversionOptionsRow: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    gap: Spacing.md,
+  },
+  conversionOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs,
+    backgroundColor: "rgba(13, 54, 18, 0.6)",
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    borderRadius: BorderRadius.full,
+  },
+  conversionOptionText: {
+    fontSize: 11,
+    fontWeight: "400",
+    color: "#E8D5B7",
+    letterSpacing: 0.3,
   },
 });
