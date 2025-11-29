@@ -159,11 +159,9 @@ export default function WelcomeScreen({ navigation }: WelcomeScreenProps) {
             >
               Powered by
             </ThemedText>
-            <Image
-              source={require("../assets/images/cygnus-logo.png")}
-              style={styles.cygnusLogo}
-              resizeMode="contain"
-            />
+            <ThemedText style={styles.cygnusText}>
+              Cygnus-A<ThemedText style={styles.superscript}>2</ThemedText>
+            </ThemedText>
           </View>
         </Animated.View>
 
@@ -377,9 +375,15 @@ const styles = StyleSheet.create({
     color: Colors.dark.textTertiary,
     fontSize: 12,
   },
-  cygnusLogo: {
-    height: 16,
-    width: 80,
+  cygnusText: {
+    color: Colors.dark.text,
+    fontSize: 12,
+    fontWeight: "500",
+  },
+  superscript: {
+    fontSize: 8,
+    lineHeight: 12,
+    color: Colors.dark.text,
   },
   formContainer: {
     flex: 1,
