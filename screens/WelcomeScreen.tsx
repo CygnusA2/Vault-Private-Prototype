@@ -535,7 +535,7 @@ const styles = StyleSheet.create({
   typewriterText: {
     fontSize: 12,
     lineHeight: 28,
-    color: Colors.dark.primary,
+    color: "#A8B4C0",
     fontWeight: "400",
     letterSpacing: 0.3,
     textAlign: "center",
