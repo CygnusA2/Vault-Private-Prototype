@@ -18,9 +18,9 @@ type IntroScreenProps = {
   navigation: NativeStackNavigationProp<AuthStackParamList, "Intro">;
 };
 
-const INTRO_TEXT = `Instant liquidity for the most demanding Ultra-High Net Worth clientele where speed matters without wealth erosion.
+const INTRO_TEXT = `Instant liquidity for the most discerning Ultra-High Net Worth clientele where timing matters without wealth erosion or security compromise.
 
-The only way to preserve wealth across generations so dynasties endure.`;
+The formula to preserve wealth across generations so dynasties endure.`;
 
 export default function IntroScreen({ navigation }: IntroScreenProps) {
   const [displayedText, setDisplayedText] = useState("");
