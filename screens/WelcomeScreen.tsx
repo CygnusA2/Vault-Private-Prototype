@@ -18,7 +18,14 @@ import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import { AuthStackParamList } from "@/navigation/AuthStackNavigator";
 import { useAuth } from "@/context/AuthContext";
 
-const TYPEWRITER_TEXT = `Vault Private isn't just about speed—it's about control. Real wealth isn't just accessible; it's protected. Your assets. Your terms. Your timeline. Only you decide when capital moves.`;
+const TYPEWRITER_TEXT = `POWERED BY CYGNUS-A²
+
+Vault Private: built to fortress your illiquid assets.
+Real wealth demands more than speed—it demands protection.
+
+Behind every access: enterprise-grade security.
+Every transaction: encrypted and verified.
+Your assets: shielded and safe.`;
 
 type WelcomeScreenProps = {
   navigation: NativeStackNavigationProp<AuthStackParamList, "Welcome">;
@@ -527,8 +534,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.sm,
   },
   typewriterText: {
-    fontSize: 15,
-    lineHeight: 26,
+    fontSize: 14,
+    lineHeight: 32,
     color: Colors.dark.primary,
     fontWeight: "400",
     letterSpacing: 0.3,
