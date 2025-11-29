@@ -19,7 +19,6 @@ import { AuthStackParamList } from "@/navigation/AuthStackNavigator";
 import { useAuth } from "@/context/AuthContext";
 
 const TYPEWRITER_TEXT = `POWERED BY CYGNUS-A²
-
 Vault Private: built to fortress your illiquid assets.
 Real wealth demands more than speed—it demands protection.
 
@@ -534,8 +533,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.sm,
   },
   typewriterText: {
-    fontSize: 14,
-    lineHeight: 32,
+    fontSize: 12,
+    lineHeight: 28,
     color: Colors.dark.primary,
     fontWeight: "400",
     letterSpacing: 0.3,
