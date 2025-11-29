@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { View, StyleSheet, Pressable, TextInput } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -68,6 +68,24 @@ export default function LedgerTokenScreen() {
   const [conversionProgress, setConversionProgress] = useState(0);
   const [conversionType, setConversionType] = useState<"partially" | "entire">("entire");
   const [convertedUSD, setConvertedUSD] = useState(0);
+  
+  const [conversionPhase, setConversionPhase] = useState<"geo" | "rate" | "ai" | "choice" | "converting" | "complete">("geo");
+  const [geoZoomLevel, setGeoZoomLevel] = useState(0);
+  const [exchangeRate, setExchangeRate] = useState(0);
+  const [aiRecommendation, setAiRecommendation] = useState({ recommended: 65, reason: "" });
+  const [showAiChoice, setShowAiChoice] = useState(false);
+  const [actualConvertPercent, setActualConvertPercent] = useState(1);
+  
+  const conversionTimeoutsRef = useRef<NodeJS.Timeout[]>([]);
+  const exchangeRateRef = useRef(0);
+  const aiRecommendationRef = useRef({ recommended: 65, reason: "" });
+
+  useEffect(() => {
+    return () => {
+      conversionTimeoutsRef.current.forEach(timeout => clearTimeout(timeout));
+      conversionTimeoutsRef.current = [];
+    };
+  }, []);
 
   const pulseAnim = useSharedValue(1);
 
@@ -126,80 +144,135 @@ export default function LedgerTokenScreen() {
   };
 
   const handleConvertAction = (type: "partially" | "entire") => {
+    conversionTimeoutsRef.current.forEach(timeout => clearTimeout(timeout));
+    conversionTimeoutsRef.current = [];
+    
     const usdAmount = type === "entire" ? tokenAmount * 100 : Math.floor(tokenAmount * 50);
     setConversionType(type);
     setConvertedUSD(usdAmount);
     setConversionProgress(0);
+    setConversionPhase("geo");
+    setGeoZoomLevel(0);
+    setShowAiChoice(false);
     setShowConversion(true);
+    setActualConvertPercent(1);
+    
+    const rate = 99.73 + Math.random() * 0.5;
+    exchangeRateRef.current = rate;
+    setExchangeRate(rate);
+    
+    const recommendedPercent = Math.floor(60 + Math.random() * 15);
+    const rateDeviation = (2 + Math.random() * 1.5).toFixed(1);
+    const recommendation = {
+      recommended: recommendedPercent,
+      reason: `Current exchange rate is ${rateDeviation}% below optimal. I recommend converting ${recommendedPercent}% now ($${Math.floor(usdAmount * recommendedPercent / 100).toLocaleString()}) and monitoring the remaining ${100 - recommendedPercent}% for better rates.`
+    };
+    aiRecommendationRef.current = recommendation;
+    setAiRecommendation(recommendation);
+    
+    const t1 = setTimeout(() => setGeoZoomLevel(1), 800);
+    const t2 = setTimeout(() => setGeoZoomLevel(2), 1600);
+    const t3 = setTimeout(() => setGeoZoomLevel(3), 2400);
+    const t4 = setTimeout(() => setGeoZoomLevel(4), 3200);
+    
+    const t5 = setTimeout(() => {
+      setConversionPhase("rate");
+      setConversionProgress(25);
+    }, 4000);
+    
+    const t6 = setTimeout(() => {
+      setConversionPhase("ai");
+      setConversionProgress(40);
+    }, 5500);
+    
+    const t7 = setTimeout(() => {
+      setConversionPhase("choice");
+      setConversionProgress(50);
+      setShowAiChoice(true);
+    }, 7500);
+    
+    conversionTimeoutsRef.current = [t1, t2, t3, t4, t5, t6, t7];
+  };
+
+  const proceedWithConversion = (followAi: boolean) => {
+    setShowAiChoice(false);
+    setConversionPhase("converting");
+    
+    const recommendedPercent = aiRecommendationRef.current.recommended;
+    const convertPercent = followAi ? recommendedPercent / 100 : 1;
+    setActualConvertPercent(convertPercent);
+    
+    const finalAmount = followAi 
+      ? Math.floor(convertedUSD * recommendedPercent / 100)
+      : convertedUSD;
     
     const stages = [
-      { progress: 15, delay: 800 },
-      { progress: 35, delay: 1200 },
-      { progress: 55, delay: 1000 },
-      { progress: 75, delay: 1200 },
+      { progress: 60, delay: 800 },
+      { progress: 75, delay: 1000 },
       { progress: 90, delay: 800 },
       { progress: 100, delay: 600 },
     ];
     
     let totalDelay = 0;
+    const stageTimeouts: NodeJS.Timeout[] = [];
+    
     stages.forEach((stage) => {
       totalDelay += stage.delay;
-      setTimeout(() => {
+      const t = setTimeout(() => {
         setConversionProgress(stage.progress);
       }, totalDelay);
+      stageTimeouts.push(t);
     });
     
-    setTimeout(() => {
-      const remainingProperty = property1Value + property2Value;
-      const totalInitial = INITIAL_PROPERTY1 + INITIAL_PROPERTY2;
-      const convertedAmount = totalInitial - remainingProperty;
+    const completeTimeout = setTimeout(() => {
+      setConversionPhase("complete");
       
-      const property1ConvertedAmount = INITIAL_PROPERTY1 - property1Value;
-      const property2ConvertedAmount = INITIAL_PROPERTY2 - property2Value;
+      const totalTransformed = transformed1Raw + transformed2Raw;
+      const tokensConverted = Math.floor(totalTransformed / 100);
+      const tokensToConvert = Math.floor(tokensConverted * convertPercent);
+      const tokensRemaining = tokensConverted - tokensToConvert;
+      const cashConverted = tokensToConvert * 100;
       
-      if (type === "entire") {
-        setConvertedAmounts({
-          convertedCash: convertedAmount,
-          remainingAmount: remainingProperty,
-          property1Remaining: property1Value,
-          property1Converted: property1ConvertedAmount,
-          property2Remaining: property2Value,
-          property2Converted: property2ConvertedAmount,
-        });
+      const property1Portion = transformed1Raw > 0 ? transformed1Raw / totalTransformed : 0;
+      const property2Portion = transformed2Raw > 0 ? transformed2Raw / totalTransformed : 0;
+      
+      const property1CashConverted = Math.floor(cashConverted * property1Portion);
+      const property2CashConverted = Math.floor(cashConverted * property2Portion);
+      
+      setConvertedAmounts({
+        convertedCash: cashConverted,
+        remainingAmount: property1Value + property2Value + (tokensRemaining * 100),
+        property1Remaining: property1Value,
+        property1Converted: property1CashConverted,
+        property2Remaining: property2Value,
+        property2Converted: property2CashConverted,
+      });
+      
+      if (convertPercent >= 1) {
         setTransformed1("");
         setTransformed2("");
         setTransformed1Raw(0);
         setTransformed2Raw(0);
+        setTokensReady(false);
+        setTokenAmount(0);
       } else {
-        const partialAmount = Math.floor(convertedAmount / 2);
-        const partialRemaining = convertedAmount - partialAmount;
-        setConvertedAmounts({
-          convertedCash: partialAmount,
-          remainingAmount: remainingProperty + partialRemaining,
-          property1Remaining: property1Value + partialRemaining,
-          property1Converted: Math.floor(property1ConvertedAmount / 2),
-          property2Remaining: property2Value,
-          property2Converted: Math.floor(property2ConvertedAmount / 2),
-        });
-        if (partialRemaining > 0) {
-          setTransformed1(formatNumber(partialRemaining));
-          setTransformed1Raw(partialRemaining);
-          setProperty1Value(property1Value);
-        } else {
-          setTransformed1("");
-          setTransformed1Raw(0);
-        }
-        setTransformed2("");
-        setTransformed2Raw(0);
+        const remainingTokens = Math.floor(tokenAmount * (1 - convertPercent));
+        setTokenAmount(remainingTokens);
       }
       
-      setTimeout(() => {
+      setConvertedUSD(finalAmount);
+      
+      const closeTimeout = setTimeout(() => {
         setShowConversion(false);
         setShowConvertHighlight(false);
         setConversionDone(true);
         setShowOptimusHighlight(true);
-      }, 1500);
+      }, 2000);
+      
+      conversionTimeoutsRef.current.push(closeTimeout);
     }, totalDelay + 500);
+    
+    conversionTimeoutsRef.current = [...conversionTimeoutsRef.current, ...stageTimeouts, completeTimeout];
   };
 
   const handleOptimusPress = () => {
@@ -506,35 +579,217 @@ export default function LedgerTokenScreen() {
               colors={["rgba(13, 54, 18, 0.98)", "rgba(20, 70, 30, 0.95)"]}
               style={styles.conversionGradient}
             >
-              <View style={styles.conversionHeader}>
-                <View style={styles.conversionIconContainer}>
-                  <Feather name="refresh-cw" size={28} color="#4ade80" />
+              {conversionPhase === "geo" ? (
+                <View style={styles.geoContainer}>
+                  <View style={styles.geoGlobeContainer}>
+                    <View style={[styles.geoGlobe, geoZoomLevel >= 1 && styles.geoGlobeZoomed]}>
+                      <Feather name="globe" size={geoZoomLevel === 0 ? 80 : 60} color="#4ade80" />
+                    </View>
+                    {geoZoomLevel >= 1 ? (
+                      <Animated.View entering={FadeIn.duration(400)} style={styles.geoZoomIndicator}>
+                        <Feather name="zoom-in" size={16} color="#E8D5B7" />
+                      </Animated.View>
+                    ) : null}
+                  </View>
+                  <ThemedText style={styles.geoTitle}>
+                    {geoZoomLevel === 0 ? "Detecting Location..." : 
+                     geoZoomLevel === 1 ? "North America" :
+                     geoZoomLevel === 2 ? "United States" :
+                     geoZoomLevel === 3 ? "California" :
+                     "Beverly Hills, CA 90210"}
+                  </ThemedText>
+                  <View style={styles.geoPath}>
+                    <View style={[styles.geoPathDot, geoZoomLevel >= 0 && styles.geoPathDotActive]} />
+                    <View style={[styles.geoPathLine, geoZoomLevel >= 1 && styles.geoPathLineActive]} />
+                    <View style={[styles.geoPathDot, geoZoomLevel >= 1 && styles.geoPathDotActive]} />
+                    <View style={[styles.geoPathLine, geoZoomLevel >= 2 && styles.geoPathLineActive]} />
+                    <View style={[styles.geoPathDot, geoZoomLevel >= 2 && styles.geoPathDotActive]} />
+                    <View style={[styles.geoPathLine, geoZoomLevel >= 3 && styles.geoPathLineActive]} />
+                    <View style={[styles.geoPathDot, geoZoomLevel >= 3 && styles.geoPathDotActive]} />
+                    <View style={[styles.geoPathLine, geoZoomLevel >= 4 && styles.geoPathLineActive]} />
+                    <View style={[styles.geoPathDot, geoZoomLevel >= 4 && styles.geoPathDotActive]} />
+                  </View>
+                  {geoZoomLevel >= 4 ? (
+                    <Animated.View entering={FadeIn.duration(300)} style={styles.geoLocationConfirmed}>
+                      <Feather name="map-pin" size={16} color="#4ade80" />
+                      <ThemedText style={styles.geoLocationText}>Location confirmed</ThemedText>
+                    </Animated.View>
+                  ) : null}
                 </View>
-                <ThemedText style={styles.conversionTitle}>
-                  Converting to USD
-                </ThemedText>
-                <ThemedText style={styles.conversionSubtitle}>
-                  {conversionType === "entire" ? "100% Conversion" : "50% Partial Conversion"}
-                </ThemedText>
-              </View>
+              ) : null}
 
-              <View style={styles.conversionAmounts}>
-                <View style={styles.conversionFromTo}>
-                  <View style={styles.conversionAmount}>
-                    <ThemedText style={styles.conversionLabel}>From Tokens</ThemedText>
-                    <ThemedText style={styles.conversionValue}>
-                      {(conversionType === "entire" ? tokenAmount : Math.floor(tokenAmount / 2)).toLocaleString()} VLT-RE
+              {conversionPhase === "rate" ? (
+                <Animated.View entering={FadeIn.duration(400)} style={styles.rateContainer}>
+                  <View style={styles.rateHeader}>
+                    <Feather name="map-pin" size={20} color="#4ade80" />
+                    <ThemedText style={styles.rateLocation}>Beverly Hills, California, USA</ThemedText>
+                  </View>
+                  <View style={styles.rateCurrencyDetected}>
+                    <ThemedText style={styles.rateCurrencyLabel}>Currency Auto-Detected</ThemedText>
+                    <View style={styles.rateCurrencyBadge}>
+                      <ThemedText style={styles.rateCurrencySymbol}>$</ThemedText>
+                      <ThemedText style={styles.rateCurrencyName}>USD</ThemedText>
+                    </View>
+                  </View>
+                  <View style={styles.rateDisplay}>
+                    <ThemedText style={styles.rateLabel}>Real-Time Exchange Rate</ThemedText>
+                    <View style={styles.rateValueContainer}>
+                      <ThemedText style={styles.rateValue}>1 VLT-RE = ${exchangeRate.toFixed(2)} USD</ThemedText>
+                      <View style={styles.rateLive}>
+                        <View style={styles.rateLiveDot} />
+                        <ThemedText style={styles.rateLiveText}>LIVE</ThemedText>
+                      </View>
+                    </View>
+                    <ThemedText style={styles.rateTimestamp}>
+                      Updated: {new Date().toLocaleTimeString()} PST
                     </ThemedText>
                   </View>
-                  <Feather name="arrow-right" size={24} color="#4ade80" />
-                  <View style={styles.conversionAmount}>
-                    <ThemedText style={styles.conversionLabel}>To USD Cash</ThemedText>
-                    <ThemedText style={styles.conversionValueUSD}>
-                      ${convertedUSD.toLocaleString()}
+                </Animated.View>
+              ) : null}
+
+              {conversionPhase === "ai" ? (
+                <Animated.View entering={FadeIn.duration(400)} style={styles.aiContainer}>
+                  <View style={styles.aiHeader}>
+                    <View style={styles.aiAvatar}>
+                      <Feather name="cpu" size={24} color="#4ade80" />
+                    </View>
+                    <ThemedText style={styles.aiTitle}>AI Agent Analysis</ThemedText>
+                  </View>
+                  <View style={styles.aiAnalyzing}>
+                    <View style={styles.aiDots}>
+                      <View style={[styles.aiDot, { opacity: 1 }]} />
+                      <View style={[styles.aiDot, { opacity: 0.7 }]} />
+                      <View style={[styles.aiDot, { opacity: 0.4 }]} />
+                    </View>
+                    <ThemedText style={styles.aiAnalyzingText}>Analyzing exchange rate trends...</ThemedText>
+                  </View>
+                </Animated.View>
+              ) : null}
+
+              {conversionPhase === "choice" && showAiChoice ? (
+                <Animated.View entering={FadeIn.duration(400)} style={styles.choiceContainer}>
+                  <View style={styles.aiHeader}>
+                    <View style={styles.aiAvatar}>
+                      <Feather name="cpu" size={24} color="#4ade80" />
+                    </View>
+                    <ThemedText style={styles.aiTitle}>AI Agent Recommendation</ThemedText>
+                  </View>
+                  <View style={styles.choiceRecommendation}>
+                    <Feather name="alert-triangle" size={18} color="#f59e0b" />
+                    <ThemedText style={styles.choiceRecommendationText}>
+                      {aiRecommendation.reason}
                     </ThemedText>
                   </View>
-                </View>
-              </View>
+                  <View style={styles.choiceButtons}>
+                    <Pressable 
+                      style={styles.choiceButtonProceed}
+                      onPress={() => proceedWithConversion(false)}
+                    >
+                      <ThemedText style={styles.choiceButtonProceedText}>
+                        Proceed with 100%
+                      </ThemedText>
+                      <ThemedText style={styles.choiceButtonSubtext}>
+                        ${convertedUSD.toLocaleString()}
+                      </ThemedText>
+                    </Pressable>
+                    <Pressable 
+                      style={styles.choiceButtonAi}
+                      onPress={() => proceedWithConversion(true)}
+                    >
+                      <View style={styles.choiceButtonAiHeader}>
+                        <Feather name="cpu" size={14} color="#1a1a1a" />
+                        <ThemedText style={styles.choiceButtonAiText}>
+                          Follow AI Recommendation
+                        </ThemedText>
+                      </View>
+                      <ThemedText style={styles.choiceButtonAiSubtext}>
+                        Convert {aiRecommendation.recommended}% now (${Math.floor(convertedUSD * aiRecommendation.recommended / 100).toLocaleString()})
+                      </ThemedText>
+                    </Pressable>
+                  </View>
+                </Animated.View>
+              ) : null}
+
+              {conversionPhase === "converting" || conversionPhase === "complete" ? (
+                <Animated.View entering={FadeIn.duration(400)}>
+                  <View style={styles.conversionHeader}>
+                    <View style={styles.conversionIconContainer}>
+                      <Feather name="refresh-cw" size={28} color="#4ade80" />
+                    </View>
+                    <ThemedText style={styles.conversionTitle}>
+                      Converting to USD
+                    </ThemedText>
+                  </View>
+
+                  <View style={styles.conversionAmounts}>
+                    <View style={styles.conversionFromTo}>
+                      <View style={styles.conversionAmount}>
+                        <ThemedText style={styles.conversionLabel}>From Tokens</ThemedText>
+                        <ThemedText style={styles.conversionValue}>
+                          {(conversionType === "entire" ? tokenAmount : Math.floor(tokenAmount / 2)).toLocaleString()} VLT-RE
+                        </ThemedText>
+                      </View>
+                      <Feather name="arrow-right" size={24} color="#4ade80" />
+                      <View style={styles.conversionAmount}>
+                        <ThemedText style={styles.conversionLabel}>To USD Cash</ThemedText>
+                        <ThemedText style={styles.conversionValueUSD}>
+                          ${convertedUSD.toLocaleString()}
+                        </ThemedText>
+                      </View>
+                    </View>
+                  </View>
+
+                  <View style={styles.conversionProgressContainer}>
+                    <View style={styles.conversionProgressBar}>
+                      <View 
+                        style={[
+                          styles.conversionProgressFill, 
+                          { width: `${conversionProgress}%` }
+                        ]} 
+                      />
+                    </View>
+                    <ThemedText style={styles.conversionProgressText}>
+                      {conversionProgress}%
+                    </ThemedText>
+                  </View>
+
+                  <View style={styles.conversionSteps}>
+                    <View style={[styles.conversionStep, conversionProgress >= 60 && styles.conversionStepActive]}>
+                      <Feather name={conversionProgress >= 60 ? "check-circle" : "circle"} size={16} color={conversionProgress >= 60 ? "#4ade80" : "#666"} />
+                      <ThemedText style={[styles.conversionStepText, conversionProgress >= 60 && styles.conversionStepTextActive]}>
+                        Processing conversion
+                      </ThemedText>
+                    </View>
+                    <View style={[styles.conversionStep, conversionProgress >= 75 && styles.conversionStepActive]}>
+                      <Feather name={conversionProgress >= 75 ? "check-circle" : "circle"} size={16} color={conversionProgress >= 75 ? "#4ade80" : "#666"} />
+                      <ThemedText style={[styles.conversionStepText, conversionProgress >= 75 && styles.conversionStepTextActive]}>
+                        Transferring to USD
+                      </ThemedText>
+                    </View>
+                    <View style={[styles.conversionStep, conversionProgress >= 90 && styles.conversionStepActive]}>
+                      <Feather name={conversionProgress >= 90 ? "check-circle" : "circle"} size={16} color={conversionProgress >= 90 ? "#4ade80" : "#666"} />
+                      <ThemedText style={[styles.conversionStepText, conversionProgress >= 90 && styles.conversionStepTextActive]}>
+                        Confirming transaction
+                      </ThemedText>
+                    </View>
+                    <View style={[styles.conversionStep, conversionProgress >= 100 && styles.conversionStepActive]}>
+                      <Feather name={conversionProgress >= 100 ? "check-circle" : "circle"} size={16} color={conversionProgress >= 100 ? "#4ade80" : "#666"} />
+                      <ThemedText style={[styles.conversionStepText, conversionProgress >= 100 && styles.conversionStepTextActive]}>
+                        Conversion complete
+                      </ThemedText>
+                    </View>
+                  </View>
+
+                  {conversionPhase === "complete" ? (
+                    <View style={styles.conversionComplete}>
+                      <Feather name="check-circle" size={32} color="#4ade80" />
+                      <ThemedText style={styles.conversionCompleteText}>
+                        ${convertedUSD.toLocaleString()} USD added to your account
+                      </ThemedText>
+                    </View>
+                  ) : null}
+                </Animated.View>
+              ) : null}
 
               <View style={styles.conversionProgressContainer}>
                 <View style={styles.conversionProgressBar}>
@@ -549,48 +804,6 @@ export default function LedgerTokenScreen() {
                   {conversionProgress}%
                 </ThemedText>
               </View>
-
-              <View style={styles.conversionSteps}>
-                <View style={[styles.conversionStep, conversionProgress >= 15 && styles.conversionStepActive]}>
-                  <Feather name={conversionProgress >= 15 ? "check-circle" : "circle"} size={16} color={conversionProgress >= 15 ? "#4ade80" : "#666"} />
-                  <ThemedText style={[styles.conversionStepText, conversionProgress >= 15 && styles.conversionStepTextActive]}>
-                    Validating tokens
-                  </ThemedText>
-                </View>
-                <View style={[styles.conversionStep, conversionProgress >= 35 && styles.conversionStepActive]}>
-                  <Feather name={conversionProgress >= 35 ? "check-circle" : "circle"} size={16} color={conversionProgress >= 35 ? "#4ade80" : "#666"} />
-                  <ThemedText style={[styles.conversionStepText, conversionProgress >= 35 && styles.conversionStepTextActive]}>
-                    Calculating exchange rate
-                  </ThemedText>
-                </View>
-                <View style={[styles.conversionStep, conversionProgress >= 55 && styles.conversionStepActive]}>
-                  <Feather name={conversionProgress >= 55 ? "check-circle" : "circle"} size={16} color={conversionProgress >= 55 ? "#4ade80" : "#666"} />
-                  <ThemedText style={[styles.conversionStepText, conversionProgress >= 55 && styles.conversionStepTextActive]}>
-                    Processing conversion
-                  </ThemedText>
-                </View>
-                <View style={[styles.conversionStep, conversionProgress >= 75 && styles.conversionStepActive]}>
-                  <Feather name={conversionProgress >= 75 ? "check-circle" : "circle"} size={16} color={conversionProgress >= 75 ? "#4ade80" : "#666"} />
-                  <ThemedText style={[styles.conversionStepText, conversionProgress >= 75 && styles.conversionStepTextActive]}>
-                    Transferring funds
-                  </ThemedText>
-                </View>
-                <View style={[styles.conversionStep, conversionProgress >= 100 && styles.conversionStepActive]}>
-                  <Feather name={conversionProgress >= 100 ? "check-circle" : "circle"} size={16} color={conversionProgress >= 100 ? "#4ade80" : "#666"} />
-                  <ThemedText style={[styles.conversionStepText, conversionProgress >= 100 && styles.conversionStepTextActive]}>
-                    Conversion complete
-                  </ThemedText>
-                </View>
-              </View>
-
-              {conversionProgress >= 100 ? (
-                <View style={styles.conversionComplete}>
-                  <Feather name="check-circle" size={32} color="#4ade80" />
-                  <ThemedText style={styles.conversionCompleteText}>
-                    ${convertedUSD.toLocaleString()} USD added to your account
-                  </ThemedText>
-                </View>
-              ) : null}
             </LinearGradient>
           </View>
         </View>
@@ -1112,5 +1325,293 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#4ade80",
     textAlign: "center",
+  },
+  geoContainer: {
+    alignItems: "center",
+    paddingVertical: Spacing.xl,
+  },
+  geoGlobeContainer: {
+    position: "relative",
+    marginBottom: Spacing.lg,
+  },
+  geoGlobe: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: "rgba(74, 222, 128, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "rgba(74, 222, 128, 0.3)",
+  },
+  geoGlobeZoomed: {
+    backgroundColor: "rgba(74, 222, 128, 0.2)",
+    borderColor: "#4ade80",
+  },
+  geoZoomIndicator: {
+    position: "absolute",
+    bottom: -5,
+    right: -5,
+    backgroundColor: "rgba(13, 54, 18, 0.9)",
+    borderRadius: 12,
+    padding: 6,
+    borderWidth: 1,
+    borderColor: "#4ade80",
+  },
+  geoTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#E8D5B7",
+    marginBottom: Spacing.lg,
+    textAlign: "center",
+  },
+  geoPath: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: Spacing.lg,
+  },
+  geoPathDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: "rgba(74, 222, 128, 0.3)",
+  },
+  geoPathDotActive: {
+    backgroundColor: "#4ade80",
+  },
+  geoPathLine: {
+    width: 20,
+    height: 2,
+    backgroundColor: "rgba(74, 222, 128, 0.2)",
+  },
+  geoPathLineActive: {
+    backgroundColor: "#4ade80",
+  },
+  geoLocationConfirmed: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+    backgroundColor: "rgba(74, 222, 128, 0.15)",
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    borderRadius: BorderRadius.full,
+  },
+  geoLocationText: {
+    fontSize: 13,
+    fontWeight: "500",
+    color: "#4ade80",
+  },
+  rateContainer: {
+    alignItems: "center",
+    paddingVertical: Spacing.lg,
+  },
+  rateHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+    marginBottom: Spacing.lg,
+  },
+  rateLocation: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#E8D5B7",
+  },
+  rateCurrencyDetected: {
+    alignItems: "center",
+    marginBottom: Spacing.xl,
+  },
+  rateCurrencyLabel: {
+    fontSize: 12,
+    fontWeight: "400",
+    color: "#A8C4B5",
+    marginBottom: Spacing.sm,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  rateCurrencyBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs,
+    backgroundColor: "rgba(74, 222, 128, 0.15)",
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.lg,
+    borderRadius: BorderRadius.full,
+    borderWidth: 1,
+    borderColor: "#4ade80",
+  },
+  rateCurrencySymbol: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#4ade80",
+  },
+  rateCurrencyName: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#E8D5B7",
+  },
+  rateDisplay: {
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.2)",
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.lg,
+    width: "100%",
+  },
+  rateLabel: {
+    fontSize: 11,
+    fontWeight: "400",
+    color: "#A8C4B5",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    marginBottom: Spacing.sm,
+  },
+  rateValueContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
+    marginBottom: Spacing.sm,
+  },
+  rateValue: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#4ade80",
+  },
+  rateLive: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "rgba(239, 68, 68, 0.2)",
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: BorderRadius.full,
+  },
+  rateLiveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#ef4444",
+  },
+  rateLiveText: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: "#ef4444",
+    letterSpacing: 0.5,
+  },
+  rateTimestamp: {
+    fontSize: 11,
+    fontWeight: "400",
+    color: "#666",
+  },
+  aiContainer: {
+    alignItems: "center",
+    paddingVertical: Spacing.xl,
+  },
+  aiHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
+    marginBottom: Spacing.xl,
+  },
+  aiAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "rgba(74, 222, 128, 0.15)",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#4ade80",
+  },
+  aiTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#E8D5B7",
+  },
+  aiAnalyzing: {
+    alignItems: "center",
+    gap: Spacing.md,
+  },
+  aiDots: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  aiDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: "#4ade80",
+  },
+  aiDotAnimated: {
+    opacity: 0.6,
+  },
+  aiAnalyzingText: {
+    fontSize: 14,
+    fontWeight: "400",
+    color: "#A8C4B5",
+  },
+  choiceContainer: {
+    paddingVertical: Spacing.lg,
+  },
+  choiceRecommendation: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: Spacing.md,
+    backgroundColor: "rgba(245, 158, 11, 0.1)",
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.lg,
+    marginBottom: Spacing.xl,
+    borderWidth: 1,
+    borderColor: "rgba(245, 158, 11, 0.3)",
+  },
+  choiceRecommendationText: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: "400",
+    color: "#E8D5B7",
+    lineHeight: 20,
+  },
+  choiceButtons: {
+    gap: Spacing.md,
+  },
+  choiceButtonProceed: {
+    backgroundColor: "rgba(74, 222, 128, 0.1)",
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.lg,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(74, 222, 128, 0.3)",
+  },
+  choiceButtonProceedText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#E8D5B7",
+    marginBottom: 4,
+  },
+  choiceButtonSubtext: {
+    fontSize: 14,
+    fontWeight: "400",
+    color: "#A8C4B5",
+  },
+  choiceButtonAi: {
+    backgroundColor: "#4ade80",
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.lg,
+    alignItems: "center",
+  },
+  choiceButtonAiHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+    marginBottom: 4,
+  },
+  choiceButtonAiText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#1a1a1a",
+  },
+  choiceButtonAiSubtext: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "rgba(0, 0, 0, 0.7)",
   },
 });
