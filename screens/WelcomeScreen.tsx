@@ -160,7 +160,7 @@ export default function WelcomeScreen({ navigation }: WelcomeScreenProps) {
               Powered by
             </ThemedText>
             <ThemedText style={styles.cygnusText}>
-              Cygnus-A<ThemedText style={styles.superscript}>2</ThemedText>
+              Cygnus-A²
             </ThemedText>
           </View>
         </Animated.View>
@@ -376,14 +376,8 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   cygnusText: {
-    color: Colors.dark.text,
+    color: Colors.dark.textTertiary,
     fontSize: 12,
-    fontWeight: "500",
-  },
-  superscript: {
-    fontSize: 8,
-    lineHeight: 12,
-    color: Colors.dark.text,
   },
   formContainer: {
     flex: 1,
