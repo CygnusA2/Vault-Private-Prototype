@@ -1,5 +1,6 @@
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import IntroScreen from "@/screens/IntroScreen";
 import WelcomeScreen from "@/screens/WelcomeScreen";
 import KYCNameScreen from "@/screens/KYCNameScreen";
 import KYCDocumentScreen from "@/screens/KYCDocumentScreen";
@@ -12,6 +13,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { getCommonScreenOptions } from "@/navigation/screenOptions";
 
 export type AuthStackParamList = {
+  Intro: undefined;
   Welcome: undefined;
   KYCName: undefined;
   KYCDocument: undefined;
@@ -34,6 +36,7 @@ export default function AuthStackNavigator() {
         headerShown: false,
       }}
     >
+      <Stack.Screen name="Intro" component={IntroScreen} />
       <Stack.Screen name="Welcome" component={WelcomeScreen} />
       <Stack.Screen
         name="KYCName"
