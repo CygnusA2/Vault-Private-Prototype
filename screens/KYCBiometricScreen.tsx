@@ -31,10 +31,10 @@ const IRIS_HEIGHT = 120;
 const SCAN_LINE_HEIGHT = 3;
 
 const FINGERPRINT_FINGERS = [
-  { id: "rightIndex", name: "Right Index", scansRequired: 4 },
-  { id: "leftIndex", name: "Left Index", scansRequired: 4 },
-  { id: "rightThumb", name: "Right Thumb", scansRequired: 4 },
-  { id: "leftThumb", name: "Left Thumb", scansRequired: 4 },
+  { id: "rightIndex", name: "Right Index", scansRequired: 1 },
+  { id: "leftIndex", name: "Left Index", scansRequired: 1 },
+  { id: "rightThumb", name: "Right Thumb", scansRequired: 1 },
+  { id: "leftThumb", name: "Left Thumb", scansRequired: 1 },
 ];
 
 export default function KYCBiometricScreen({ navigation }: KYCBiometricScreenProps) {
@@ -537,7 +537,7 @@ export default function KYCBiometricScreen({ navigation }: KYCBiometricScreenPro
             <View style={styles.enrolledSuccessContainer}>
               <Feather name="check-circle" size={18} color={Colors.dark.success} />
               <ThemedText type="small" style={{ color: Colors.dark.success }}>
-                All 4 fingerprints enrolled ({totalScansRequired} scans completed)
+                All 4 fingerprints enrolled successfully
               </ThemedText>
             </View>
           ) : null}
