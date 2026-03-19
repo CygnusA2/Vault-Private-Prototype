@@ -68,14 +68,14 @@ export default function WelcomeScreen({ navigation }: WelcomeScreenProps) {
         setTypewriterText(TYPEWRITER_TEXT.substring(0, charIndexRef.current + 1));
         charIndexRef.current++;
 
-        let delay = 95 + Math.random() * 60;
+        let delay = 30 + Math.random() * 20;
         
         if (nextChar === "." || nextChar === ",") {
-          delay = 650 + Math.random() * 450;
+          delay = 200 + Math.random() * 100;
         } else if (nextChar === "—") {
-          delay = 400 + Math.random() * 200;
+          delay = 120 + Math.random() * 80;
         } else if (Math.random() < 0.10) {
-          delay = 400 + Math.random() * 300;
+          delay = 100 + Math.random() * 80;
         }
 
         timeoutRef.current = setTimeout(typeNextChar, delay);
