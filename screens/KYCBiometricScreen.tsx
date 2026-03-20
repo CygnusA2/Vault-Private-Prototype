@@ -48,9 +48,6 @@ export default function KYCBiometricScreen({ navigation }: KYCBiometricScreenPro
   const [irisScanProgress, setIrisScanProgress] = useState(0);
   const [dowJonesChecked, setDowJonesChecked] = useState(false);
   const [dowJonesChecking, setDowJonesChecking] = useState(false);
-  const [lsegEnabled, setLsegEnabled] = useState(false);
-  const [lsegChecked, setLsegChecked] = useState(false);
-  const [lsegChecking, setLsegChecking] = useState(false);
   
   const [vaultPinStarted, setVaultPinStarted] = useState(false);
   const [vaultPinPhase, setVaultPinPhase] = useState(0);
@@ -72,7 +69,6 @@ export default function KYCBiometricScreen({ navigation }: KYCBiometricScreenPro
   const [isScanning, setIsScanning] = useState(false);
   
   const buttonScale = useSharedValue(1);
-  const lsegPulseAnim = useSharedValue(1);
   const pulseAnim = useSharedValue(1);
   const fingerprintScale = useSharedValue(1);
   const fingerprintGlow = useSharedValue(0);
@@ -95,18 +91,6 @@ export default function KYCBiometricScreen({ navigation }: KYCBiometricScreenPro
       pulseAnim.value = 1;
     }
   }, [dowJonesChecking]);
-
-  useEffect(() => {
-    if (lsegChecking) {
-      lsegPulseAnim.value = withRepeat(
-        withTiming(1.05, { duration: 600 }),
-        -1,
-        true
-      );
-    } else {
-      lsegPulseAnim.value = 1;
-    }
-  }, [lsegChecking]);
 
   const generateRandomHex = (length: number) => {
     const chars = "0123456789ABCDEF";
@@ -280,10 +264,6 @@ export default function KYCBiometricScreen({ navigation }: KYCBiometricScreenPro
     transform: [{ scale: pulseAnim.value }],
   }));
 
-  const lsegPulseStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: lsegPulseAnim.value }],
-  }));
-
   const irisScanLineAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: irisScanLinePosition.value }],
     opacity: irisScanLineOpacity.value,
@@ -368,19 +348,6 @@ export default function KYCBiometricScreen({ navigation }: KYCBiometricScreenPro
       }, 2500);
     } else {
       setDowJonesChecked(false);
-    }
-  };
-
-  const handleLsegToggle = (value: boolean) => {
-    setLsegEnabled(value);
-    if (value) {
-      setLsegChecking(true);
-      setTimeout(() => {
-        setLsegChecking(false);
-        setLsegChecked(true);
-      }, 2800);
-    } else {
-      setLsegChecked(false);
     }
   };
 
@@ -717,97 +684,6 @@ export default function KYCBiometricScreen({ navigation }: KYCBiometricScreenPro
                 style={{ color: Colors.dark.success }}
               >
                 Cleared - No matches found in global watchlists
-              </ThemedText>
-            </View>
-          ) : null}
-        </Animated.View>
-
-        <Animated.View 
-          entering={FadeIn.duration(600).delay(500)}
-          style={[styles.biometricCard, styles.lsegCard]}
-        >
-          <View style={styles.biometricHeader}>
-            <Animated.View
-              style={[
-                styles.iconContainer,
-                lsegChecked && styles.iconContainerActive,
-                lsegChecking && styles.iconContainerLsegChecking,
-                lsegPulseStyle,
-              ]}
-            >
-              <Feather
-                name="globe"
-                size={28}
-                color={
-                  lsegChecked
-                    ? Colors.dark.success
-                    : lsegChecking
-                    ? "#3B82F6"
-                    : Colors.dark.textSecondary
-                }
-              />
-            </Animated.View>
-            <View style={styles.biometricInfo}>
-              <ThemedText type="h4" style={styles.biometricTitle}>
-                LSEG World-Check
-              </ThemedText>
-              <ThemedText
-                type="small"
-                style={{ color: Colors.dark.textSecondary }}
-              >
-                {lsegChecked
-                  ? "Verification complete - Compliant"
-                  : lsegChecking
-                  ? "Running global compliance check..."
-                  : "Deeper due diligence verification"}
-              </ThemedText>
-            </View>
-            <Switch
-              value={lsegEnabled}
-              onValueChange={handleLsegToggle}
-              disabled={lsegChecking}
-              trackColor={{
-                false: Colors.dark.backgroundTertiary,
-                true: "#3B82F6",
-              }}
-              thumbColor={Colors.dark.text}
-            />
-          </View>
-          
-          <View style={styles.lsegDescription}>
-            <Feather name="info" size={16} color={Colors.dark.textTertiary} />
-            <ThemedText
-              type="small"
-              style={styles.lsegDescriptionText}
-            >
-              We securely check your provided data against LSEG's global sanctions, PEP, and regulatory watchlists to ensure compliance with international banking standards.
-            </ThemedText>
-          </View>
-
-          {lsegChecking ? (
-            <View style={styles.lsegCheckingContainer}>
-              <View style={styles.checkingProgress}>
-                <View style={styles.lsegCheckingDot} />
-                <View style={[styles.lsegCheckingDot, styles.lsegCheckingDotDelay1]} />
-                <View style={[styles.lsegCheckingDot, styles.lsegCheckingDotDelay2]} />
-              </View>
-              <ThemedText
-                type="small"
-                style={{ color: "#3B82F6" }}
-              >
-                Checking LSEG World-Check database...
-              </ThemedText>
-            </View>
-          ) : null}
-
-          {lsegChecked ? (
-            <View style={styles.lsegSuccessBadge}>
-              <Feather name="check-circle" size={18} color={Colors.dark.success} />
-              <ThemedText
-                type="small"
-                style={{ color: Colors.dark.success }}
-              >
-                Compliant - No matches in sanctions, PEP, or regulatory lists
               </ThemedText>
             </View>
           ) : null}
@@ -1339,58 +1215,6 @@ const styles = StyleSheet.create({
     opacity: 1,
   },
   successBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.sm,
-    marginTop: Spacing.lg,
-    padding: Spacing.md,
-    backgroundColor: "rgba(16, 185, 129, 0.08)",
-    borderRadius: BorderRadius.sm,
-  },
-  lsegCard: {
-    borderColor: "#3B82F6",
-    backgroundColor: "rgba(59, 130, 246, 0.03)",
-  },
-  iconContainerLsegChecking: {
-    backgroundColor: "rgba(59, 130, 246, 0.15)",
-  },
-  lsegDescription: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: Spacing.sm,
-    marginTop: Spacing.lg,
-    paddingTop: Spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: Colors.dark.border,
-  },
-  lsegDescriptionText: {
-    flex: 1,
-    color: Colors.dark.textTertiary,
-    lineHeight: 18,
-  },
-  lsegCheckingContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.md,
-    marginTop: Spacing.lg,
-    padding: Spacing.md,
-    backgroundColor: "rgba(59, 130, 246, 0.08)",
-    borderRadius: BorderRadius.sm,
-  },
-  lsegCheckingDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "#3B82F6",
-    opacity: 0.4,
-  },
-  lsegCheckingDotDelay1: {
-    opacity: 0.6,
-  },
-  lsegCheckingDotDelay2: {
-    opacity: 1,
-  },
-  lsegSuccessBadge: {
     flexDirection: "row",
     alignItems: "center",
     gap: Spacing.sm,
