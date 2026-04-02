@@ -56,6 +56,7 @@ export default function OptimusScreen() {
         </View>
         <View style={styles.headerCenter}>
           <ThemedText style={styles.title}>Optimus</ThemedText>
+          <ThemedText style={styles.subtitle}>Powered by Pier</ThemedText>
         </View>
         <View style={styles.headerRight}>
           <Feather name="battery" size={18} color={Colors.dark.text} />
@@ -64,23 +65,25 @@ export default function OptimusScreen() {
       </Animated.View>
 
       <Animated.View entering={FadeInDown.duration(400).delay(100)} style={styles.navigationContainer}>
-        <View style={styles.navigationPills}>
-          {NAVIGATION_PILLS.slice(0, 3).map((pill) => (
-            <View key={pill.id} style={styles.navPill}>
-              <ThemedText style={styles.navPillText}>{pill.label}</ThemedText>
+        <View style={styles.navCard}>
+          <View style={styles.navigationPills}>
+            {NAVIGATION_PILLS.slice(0, 3).map((pill) => (
+              <View key={pill.id} style={styles.navPill}>
+                <ThemedText style={styles.navPillText}>{pill.label}</ThemedText>
+              </View>
+            ))}
+          </View>
+          <View style={styles.navigationPills}>
+            {NAVIGATION_PILLS.slice(3, 6).map((pill) => (
+              <View key={pill.id} style={styles.navPill}>
+                <ThemedText style={styles.navPillText}>{pill.label}</ThemedText>
+              </View>
+            ))}
+          </View>
+          <View style={styles.navigationPills}>
+            <View style={styles.navPill}>
+              <ThemedText style={styles.navPillText}>{NAVIGATION_PILLS[6].label}</ThemedText>
             </View>
-          ))}
-        </View>
-        <View style={styles.navigationPills}>
-          {NAVIGATION_PILLS.slice(3, 6).map((pill) => (
-            <View key={pill.id} style={styles.navPill}>
-              <ThemedText style={styles.navPillText}>{pill.label}</ThemedText>
-            </View>
-          ))}
-        </View>
-        <View style={styles.navigationPills}>
-          <View style={styles.navPill}>
-            <ThemedText style={styles.navPillText}>{NAVIGATION_PILLS[6].label}</ThemedText>
           </View>
         </View>
       </Animated.View>
@@ -92,36 +95,32 @@ export default function OptimusScreen() {
         </Animated.View>
 
         <Animated.View entering={FadeInDown.duration(400).delay(200)} style={styles.monetarySection}>
+          {/* Row 1: single pill left-only */}
           <View style={styles.monetaryRow}>
             <View style={styles.monetaryPill}>
               <ThemedText style={styles.monetaryText}>
-                {convertedAmounts.property1Remaining > 0 
+                {convertedAmounts.property1Remaining > 0
                   ? `CST ${formatNumber(convertedAmounts.property1Remaining)}`
-                  : "CST 0"}
+                  : "CST 3,000"}
               </ThemedText>
             </View>
-            <View style={[styles.monetaryPill, styles.monetaryPillBlue]}>
-              <ThemedText style={styles.monetaryText}>
-                {convertedAmounts.property1Converted > 0 
-                  ? `£ ${formatNumber(convertedAmounts.property1Converted)}`
-                  : "0"}
-              </ThemedText>
-            </View>
+            <View style={styles.monetaryEmpty} />
           </View>
 
+          {/* Row 2: CST + £ side by side */}
           <View style={styles.monetaryRow}>
             <View style={styles.monetaryPill}>
               <ThemedText style={styles.monetaryText}>
-                {convertedAmounts.property2Remaining > 0 
+                {convertedAmounts.property2Remaining > 0
                   ? `CST ${formatNumber(convertedAmounts.property2Remaining)}`
-                  : "CST 0"}
+                  : "CST 150,000"}
               </ThemedText>
             </View>
             <View style={[styles.monetaryPill, styles.monetaryPillBlue]}>
               <ThemedText style={styles.monetaryText}>
-                {convertedAmounts.property2Converted > 0 
+                {convertedAmounts.property2Converted > 0
                   ? `£ ${formatNumber(convertedAmounts.property2Converted)}`
-                  : "0"}
+                  : "£ 150,000"}
               </ThemedText>
             </View>
           </View>
@@ -344,15 +343,27 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "flex-end",
   },
+  subtitle: {
+    fontSize: 11,
+    fontWeight: "300",
+    color: Colors.dark.textSecondary,
+    marginTop: 2,
+  },
   navigationContainer: {
     paddingHorizontal: Spacing.lg,
     marginBottom: Spacing.xl,
+  },
+  navCard: {
+    borderWidth: 1,
+    borderColor: "rgba(168, 196, 181, 0.25)",
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.md,
+    gap: Spacing.sm,
   },
   navigationPills: {
     flexDirection: "row",
     justifyContent: "center",
     gap: Spacing.sm,
-    marginBottom: Spacing.sm,
   },
   navPill: {
     paddingHorizontal: Spacing.md,
