@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import { View, StyleSheet, Pressable, TextInput } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { captureRef } from "react-native-view-shot";
+import * as Sharing from "expo-sharing";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -79,6 +81,27 @@ export default function LedgerTokenScreen() {
   const conversionTimeoutsRef = useRef<NodeJS.Timeout[]>([]);
   const exchangeRateRef = useRef(0);
   const aiRecommendationRef = useRef({ recommended: 65, reason: "" });
+  const screenRef = useRef<View>(null);
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExport = async () => {
+    if (!screenRef.current) return;
+    setIsExporting(true);
+    try {
+      const uri = await captureRef(screenRef, { format: "png", quality: 1 });
+      const canShare = await Sharing.isAvailableAsync();
+      if (canShare) {
+        await Sharing.shareAsync(uri, {
+          mimeType: "image/png",
+          dialogTitle: "Save Ledger Token screenshot",
+        });
+      }
+    } catch (error) {
+      console.error("Export failed:", error);
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   useEffect(() => {
     return () => {
@@ -282,6 +305,7 @@ export default function LedgerTokenScreen() {
 
   return (
     <AuthScreenScrollView style={styles.screenBackground} contentContainerStyle={styles.scrollContent}>
+      <View ref={screenRef} collapsable={false}>
       <Animated.View entering={FadeInDown.duration(400)} style={styles.header}>
         <View style={styles.headerLeft}>
           <ThemedText style={styles.timeText}>9:41</ThemedText>
@@ -811,6 +835,18 @@ export default function LedgerTokenScreen() {
           </View>
         </View>
       ) : null}
+      </View>
+
+      <Pressable
+        style={[styles.downloadButton, isExporting && styles.downloadButtonDisabled]}
+        onPress={handleExport}
+        disabled={isExporting}
+      >
+        <Feather name="download" size={18} color="#000000" />
+        <ThemedText style={styles.downloadButtonText}>
+          {isExporting ? "Exporting..." : "Download PNG"}
+        </ThemedText>
+      </Pressable>
     </AuthScreenScrollView>
   );
 }
@@ -1631,5 +1667,32 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "500",
     color: "rgba(0, 0, 0, 0.7)",
+  },
+  downloadButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.sm,
+    marginHorizontal: Spacing.lg,
+    marginTop: Spacing.xl,
+    marginBottom: Spacing.lg,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.xl,
+    borderRadius: BorderRadius.full,
+    backgroundColor: "#d4af37",
+    shadowColor: "#d4af37",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  downloadButtonDisabled: {
+    opacity: 0.5,
+  },
+  downloadButtonText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#000000",
+    letterSpacing: 0.5,
   },
 });
