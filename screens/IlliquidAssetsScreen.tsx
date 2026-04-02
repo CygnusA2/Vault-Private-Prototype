@@ -10,7 +10,6 @@ import Animated, {
   withDelay,
   FadeInDown,
   FadeIn,
-  interpolate,
 } from "react-native-reanimated";
 import { AuthScreenScrollView } from "@/components/AuthScreenScrollView";
 import { ThemedText } from "@/components/ThemedText";
@@ -30,9 +29,9 @@ const NAVIGATION_PILLS = [
 ];
 
 const ASSETS = [
-  { id: 1, amount: "$34 M", name: "Chelsea Mansion", progress: 75, layout: "left" as const },
-  { id: 2, amount: "$200 M", name: "Mona Lisa Yacht", progress: 60, layout: "right" as const },
-  { id: 3, amount: "$105 M", name: "Picasso Art", progress: 85, layout: "left" as const },
+  { id: 1, amount: "$34 M", name: "Chelsea Mansion", progress: 75, layout: "left" as const, letter: "A" },
+  { id: 2, amount: "$200 M", name: "Mona Lisa Yacht", progress: 60, layout: "right" as const, letter: "B" },
+  { id: 3, amount: "$105 M", name: "Picasso Art", progress: 85, layout: "left" as const, letter: "C" },
 ];
 
 export default function IlliquidAssetsScreen() {
@@ -46,7 +45,7 @@ export default function IlliquidAssetsScreen() {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleTransform = () => {
+  const handleActivateCash = () => {
     setNeedsIlliquidAssets(false);
     setNeedsLedgerToken(true);
   };
@@ -67,23 +66,25 @@ export default function IlliquidAssetsScreen() {
       </Animated.View>
 
       <Animated.View entering={FadeInDown.duration(400).delay(100)} style={styles.navigationContainer}>
-        <View style={styles.navigationPills}>
-          {NAVIGATION_PILLS.slice(0, 3).map((pill, index) => (
-            <View key={pill} style={styles.navPill}>
-              <ThemedText style={styles.navPillText}>{pill}</ThemedText>
+        <View style={styles.navCard}>
+          <View style={styles.navigationPills}>
+            {NAVIGATION_PILLS.slice(0, 3).map((pill) => (
+              <View key={pill} style={styles.navPill}>
+                <ThemedText style={styles.navPillText}>{pill}</ThemedText>
+              </View>
+            ))}
+          </View>
+          <View style={styles.navigationPills}>
+            {NAVIGATION_PILLS.slice(3, 6).map((pill) => (
+              <View key={pill} style={styles.navPill}>
+                <ThemedText style={styles.navPillText}>{pill}</ThemedText>
+              </View>
+            ))}
+          </View>
+          <View style={styles.navigationPillsCenter}>
+            <View style={styles.navPill}>
+              <ThemedText style={styles.navPillText}>{NAVIGATION_PILLS[6]}</ThemedText>
             </View>
-          ))}
-        </View>
-        <View style={styles.navigationPills}>
-          {NAVIGATION_PILLS.slice(3, 6).map((pill, index) => (
-            <View key={pill} style={styles.navPill}>
-              <ThemedText style={styles.navPillText}>{pill}</ThemedText>
-            </View>
-          ))}
-        </View>
-        <View style={styles.navigationPillsCenter}>
-          <View key={NAVIGATION_PILLS[6]} style={styles.navPill}>
-            <ThemedText style={styles.navPillText}>{NAVIGATION_PILLS[6]}</ThemedText>
           </View>
         </View>
       </Animated.View>
@@ -95,14 +96,20 @@ export default function IlliquidAssetsScreen() {
       </View>
 
       <View style={styles.bottomSection}>
-        <View style={styles.transformButtonContainer}>
-          <TransformButton onPress={handleTransform} />
+        <Cylinder delay={600} />
+
+        <View style={styles.activateRow}>
+          <ActivateCashButton onPress={handleActivateCash} />
+          <View style={styles.letterBoxes}>
+            {["A", "B", "C"].map((letter) => (
+              <View key={letter} style={styles.letterBox}>
+                <ThemedText style={styles.letterBoxText}>{letter}</ThemedText>
+              </View>
+            ))}
+          </View>
         </View>
-        <View style={styles.cylindersContainer}>
-          <Cylinder delay={600} />
-          <View style={styles.cylinderSpacer} />
-          <Cylinder delay={800} />
-        </View>
+
+        <Cylinder delay={800} />
       </View>
     </AuthScreenScrollView>
   );
@@ -123,7 +130,7 @@ function AssetRow({ asset, index }: { asset: typeof ASSETS[0]; index: number }) 
   }));
 
   const circleScale = useSharedValue(0.8);
-  
+
   useEffect(() => {
     circleScale.value = withDelay(
       index * 150 + 200,
@@ -136,17 +143,14 @@ function AssetRow({ asset, index }: { asset: typeof ASSETS[0]; index: number }) 
   }));
 
   return (
-    <Animated.View 
-      entering={FadeInDown.duration(400).delay(index * 150 + 200)} 
+    <Animated.View
+      entering={FadeInDown.duration(400).delay(index * 150 + 200)}
       style={styles.assetRow}
     >
       {asset.layout === "left" ? (
         <>
           <Animated.View style={[styles.amountCircle, circleAnimStyle]}>
-            <LinearGradient
-              colors={["#4ade80", "#22c55e"]}
-              style={styles.circleGradient}
-            >
+            <LinearGradient colors={["#4ade80", "#22c55e"]} style={styles.circleGradient}>
               <ThemedText style={styles.amountText}>{asset.amount}</ThemedText>
             </LinearGradient>
           </Animated.View>
@@ -167,9 +171,13 @@ function AssetRow({ asset, index }: { asset: typeof ASSETS[0]; index: number }) 
           <View style={styles.assetNamePill}>
             <ThemedText style={styles.assetNameText}>{asset.name}</ThemedText>
           </View>
+
+          <ThemedText style={styles.assetLetter}>{asset.letter}</ThemedText>
         </>
       ) : (
         <>
+          <ThemedText style={styles.assetLetter}>{asset.letter}</ThemedText>
+
           <View style={styles.assetNamePill}>
             <ThemedText style={styles.assetNameText}>{asset.name}</ThemedText>
           </View>
@@ -188,10 +196,7 @@ function AssetRow({ asset, index }: { asset: typeof ASSETS[0]; index: number }) 
           </View>
 
           <Animated.View style={[styles.amountCircle, circleAnimStyle]}>
-            <LinearGradient
-              colors={["#4ade80", "#22c55e"]}
-              style={styles.circleGradient}
-            >
+            <LinearGradient colors={["#4ade80", "#22c55e"]} style={styles.circleGradient}>
               <ThemedText style={styles.amountText}>{asset.amount}</ThemedText>
             </LinearGradient>
           </Animated.View>
@@ -230,36 +235,33 @@ function Cylinder({ delay }: { delay: number }) {
   );
 }
 
-function TransformButton({ onPress }: { onPress: () => void }) {
+function ActivateCashButton({ onPress }: { onPress: () => void }) {
   const scale = useSharedValue(1);
-  const buttonOpacity = useSharedValue(0);
+  const opacity = useSharedValue(0);
 
   useEffect(() => {
-    buttonOpacity.value = withDelay(700, withTiming(1, { duration: 500 }));
+    opacity.value = withDelay(700, withTiming(1, { duration: 500 }));
   }, []);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
-    opacity: buttonOpacity.value,
+    opacity: opacity.value,
   }));
 
   return (
-    <Animated.View entering={FadeIn.duration(500).delay(700)} style={animatedStyle}>
+    <Animated.View style={animatedStyle}>
       <AnimatedPressable
-        onPressIn={() => {
-          scale.value = withSpring(0.95);
-        }}
-        onPressOut={() => {
-          scale.value = withSpring(1);
-        }}
+        onPressIn={() => { scale.value = withSpring(0.95); }}
+        onPressOut={() => { scale.value = withSpring(1); }}
         onPress={onPress}
-        style={styles.transformButtonWrapper}
       >
         <LinearGradient
-          colors={["#4ade80", "#22c55e"]}
-          style={styles.transformButton}
+          colors={["#c5a88d", "#a0876f", "#8b7355"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.activateCashButton}
         >
-          <ThemedText style={styles.transformButtonText}>Transform</ThemedText>
+          <ThemedText style={styles.activateCashText}>Activate Instant Cash</ThemedText>
         </LinearGradient>
       </AnimatedPressable>
     </Animated.View>
@@ -313,11 +315,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     marginBottom: Spacing["2xl"],
   },
+  navCard: {
+    borderWidth: 1,
+    borderColor: "rgba(168, 196, 181, 0.25)",
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.md,
+    gap: Spacing.sm,
+  },
   navigationPills: {
     flexDirection: "row",
     justifyContent: "center",
     gap: Spacing.sm,
-    marginBottom: Spacing.sm,
   },
   navigationPillsCenter: {
     flexDirection: "row",
@@ -346,6 +354,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: Spacing.md,
+  },
+  assetLetter: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#FFD700",
+    textShadowColor: "rgba(255, 215, 0, 0.5)",
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
   },
   amountCircle: {
     width: 56,
@@ -410,40 +426,60 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   bottomSection: {
+    alignItems: "flex-end",
+    paddingRight: Spacing.xl,
+    gap: Spacing.sm,
+    paddingTop: Spacing.xl,
+  },
+  activateRow: {
     flexDirection: "row",
-    paddingHorizontal: Spacing.lg,
-    alignItems: "flex-start",
-    marginTop: Spacing.xl,
+    alignItems: "center",
+    gap: Spacing.md,
+    alignSelf: "stretch",
+    paddingLeft: Spacing.lg,
   },
-  transformButtonContainer: {
-    flex: 1,
-    alignItems: "flex-start",
-    justifyContent: "center",
-    paddingTop: 40,
-  },
-  transformButtonWrapper: {
-    overflow: "hidden",
-    borderRadius: BorderRadius.full,
-  },
-  transformButton: {
+  activateCashButton: {
     paddingHorizontal: Spacing.xl,
     paddingVertical: Spacing.sm,
     borderRadius: BorderRadius.full,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.2)",
+    borderColor: "rgba(212, 175, 55, 0.4)",
+    shadowColor: "#d4af37",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 20,
   },
-  transformButtonText: {
-    fontSize: 11,
-    fontWeight: "300",
-    color: Colors.dark.text,
+  activateCashText: {
+    fontSize: 10,
+    fontWeight: "400",
+    color: "#1a1a1a",
     letterSpacing: 0.5,
   },
-  cylindersContainer: {
-    alignItems: "flex-end",
-    paddingRight: Spacing.lg,
+  letterBoxes: {
+    flexDirection: "column",
+    gap: Spacing.xs,
   },
-  cylinderSpacer: {
-    height: Spacing.md,
+  letterBox: {
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 4,
+    borderRadius: 6,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "transparent",
+    borderWidth: 1,
+    borderColor: "rgba(212, 175, 55, 0.4)",
+    shadowColor: "#d4af37",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+  },
+  letterBoxText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#FFD700",
+    textShadowColor: "rgba(255, 215, 0, 0.6)",
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
   },
   cylinder: {
     width: 48,
