@@ -289,6 +289,7 @@ export default function LedgerTokenScreen() {
         </View>
         <View style={styles.headerCenter}>
           <ThemedText style={styles.title}>Ledger Token</ThemedText>
+          <ThemedText style={styles.subtitle}>Powered by Peter</ThemedText>
         </View>
         <View style={styles.headerRight}>
           <Feather name="battery" size={18} color={Colors.dark.text} />
@@ -297,6 +298,7 @@ export default function LedgerTokenScreen() {
       </Animated.View>
 
       <Animated.View entering={FadeInDown.duration(400).delay(100)} style={styles.navigationContainer}>
+        <View style={styles.navCard}>
         <View style={styles.navigationPills}>
           {NAVIGATION_PILLS.slice(0, 3).map((pill) => (
             <Pressable
@@ -336,6 +338,7 @@ export default function LedgerTokenScreen() {
           <View style={styles.navPill}>
             <ThemedText style={styles.navPillText}>{NAVIGATION_PILLS[6].label}</ThemedText>
           </View>
+        </View>
         </View>
       </Animated.View>
 
@@ -886,6 +889,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     marginBottom: Spacing.xl,
   },
+  navCard: {
+    borderWidth: 1,
+    borderColor: "rgba(168, 196, 181, 0.4)",
+    backgroundColor: "rgba(20, 54, 30, 0.3)",
+    borderRadius: 24,
+    padding: Spacing.md,
+    gap: Spacing.sm,
+  },
+  subtitle: {
+    fontSize: 11,
+    fontWeight: "300",
+    color: "#A8C4B5",
+    letterSpacing: 0.5,
+    marginTop: 2,
+  },
   navigationPills: {
     flexDirection: "row",
     justifyContent: "center",
@@ -1079,9 +1097,9 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
     paddingHorizontal: Spacing.md,
     borderRadius: BorderRadius.full,
-    backgroundColor: "rgba(20, 54, 30, 0.8)",
+    backgroundColor: "#ece5d1",
     borderWidth: 1,
-    borderColor: "rgba(168, 196, 181, 0.3)",
+    borderColor: "#d4c5a9",
     alignItems: "center",
     flexDirection: "row",
     justifyContent: "center",
@@ -1101,8 +1119,8 @@ const styles = StyleSheet.create({
   },
   actionButtonText: {
     fontSize: 11,
-    fontWeight: "300",
-    color: Colors.dark.text,
+    fontWeight: "400",
+    color: "#5c4f3d",
     letterSpacing: 0.3,
   },
   actionButtonTextHighlighted: {

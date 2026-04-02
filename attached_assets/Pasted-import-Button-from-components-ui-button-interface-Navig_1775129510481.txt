@@ -1,0 +1,82 @@
+import { Button } from "@/components/ui/button";
+
+interface NavigationPillsProps {
+  currentScreen: string;
+}
+
+export default function NavigationPills({ currentScreen }: NavigationPillsProps) {
+  let secondButton, thirdButton;
+
+  if (currentScreen === 'ledger') {
+    secondButton = { id: 'illiquid', label: 'Illiquid Assets', screen: 'illiquid' };
+    thirdButton = { id: 'optimus', label: 'Optimus', screen: 'optimus' };
+  } else if (currentScreen === 'optimus') {
+    secondButton = { id: 'illiquid', label: 'Illiquid Assets', screen: 'illiquid' };
+    thirdButton = { id: 'ledger', label: 'Ledger Token', screen: 'ledger' };
+  } else if (currentScreen === 'assets') {
+    secondButton = { id: 'ledger', label: 'Ledger Token', screen: 'ledger' };
+    thirdButton = { id: 'optimus', label: 'Optimus', screen: 'optimus' };
+  } else {
+    secondButton = { id: 'optimus', label: 'Optimus', screen: 'optimus' };
+    thirdButton = { id: 'ledger', label: 'Ledger Token', screen: 'ledger' };
+  }
+
+  const allPills = [
+    { id: 'fullwallet', label: 'Full Wallet', screen: 'fullwallet' },
+    secondButton,
+    thirdButton,
+    { id: 'riskmetrics', label: 'Risk Metrics', screen: 'riskmetrics' },
+    { id: 'blocks', label: 'Blocks', screen: 'blocks' },
+    { id: 'cardm', label: 'Card M', screen: 'cardm' },
+    { id: 'sentinel', label: 'Sentinel Transfer', screen: 'sentinel' },
+  ];
+
+  const filteredPills = (currentScreen === 'blocks' || currentScreen === 'fullwallet')
+    ? allPills.filter(pill => pill.screen !== currentScreen)
+    : allPills;
+
+  const pillStyle = (screen: string) => ({
+    backgroundColor: currentScreen === screen ? 'rgba(20, 54, 30, 0.9)' : 'rgba(20, 54, 30, 0.4)',
+    border: currentScreen === screen ? '1px solid rgba(168, 196, 181, 0.5)' : '1px solid rgba(168, 196, 181, 0.2)',
+    fontFamily: 'Space Grotesk, sans-serif',
+    letterSpacing: '0.02em',
+    minHeight: 'auto',
+  });
+
+  const pillClass = (screen: string) => `
+    px-2 py-2 rounded-full font-light text-[10px] whitespace-nowrap
+    transition-all duration-200 h-auto text-white
+    ${currentScreen === screen ? 'shadow-md' : ''}
+  `;
+
+  return (
+    <div
+      className="border rounded-3xl p-3 backdrop-blur-sm"
+      style={{ borderColor: 'rgba(168, 196, 181, 0.4)', backgroundColor: 'rgba(20, 54, 30, 0.3)' }}
+    >
+      <div className="space-y-2">
+        <div className="grid grid-cols-3 gap-2">
+          {filteredPills.slice(0, 3).map((pill) => (
+            <Button key={pill.id} variant="ghost" size="sm" className={pillClass(pill.screen)} style={pillStyle(pill.screen)} data-testid={`pill-${pill.id}`}>
+              {pill.label}
+            </Button>
+          ))}
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          {filteredPills.slice(3, 6).map((pill) => (
+            <Button key={pill.id} variant="ghost" size="sm" className={pillClass(pill.screen)} style={pillStyle(pill.screen)} data-testid={`pill-${pill.id}`}>
+              {pill.label}
+            </Button>
+          ))}
+        </div>
+        {filteredPills.length > 6 && (
+          <div className="flex justify-center">
+            <Button variant="ghost" size="sm" className={pillClass('sentinel')} style={pillStyle('sentinel')} data-testid="pill-sentinel">
+              Sentinel Transfer
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
