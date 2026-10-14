@@ -1,21 +1,21 @@
-# Vault Private — Client Experience Prototype
+# Vault Private — iOS MVP Development
 
 ## Project Title
 
-**Vault Private — Client Experience Prototype**
+**Vault Private — iOS MVP Development**
 
 ## Description
 
-Vault Private is a public client-experience prototype for ultra-high-net-worth users. It illustrates onboarding, asset submission, AI-assisted analysis concepts, tokenization simulation, and a proposed liquidity journey. Screens and code in this repository should not be taken as evidence that lending, token issuance, settlement, or regulated banking services are live.
+Vault Private is the intended external-user iOS TestFlight MVP for ultra-high-net-worth clients. The public GitHub source currently shows an earlier client-experience prototype covering onboarding, asset submission, AI-assisted analysis concepts, tokenization simulation, and a proposed liquidity journey. Persona, Plaid, and other API work is staged in the private E2E project for validation before promotion here. A screen or configuration does not establish a verified live integration or released TestFlight build.
 
-This prototype was developed on **Replit** to explore how a private banking client experience could bring those workflows together. External provider connectivity and security properties require separate end-to-end verification.
+The earlier client-experience prototype was developed on **Replit** to explore how those workflows could fit together. External provider connectivity and security properties require separate end-to-end verification.
 
 ---
 
 
 ## Maturity and validation
 
-This repository is a demonstration prototype. It is distinct from the private Cygnus-A² MVP and production website repositories. The presence of a screen, dependency, configuration key, or simulated transaction does not establish a live provider integration, production security control, completed KYC, legal document execution, credit decision, loan disbursement, or on-chain settlement. Validate any such capability separately before citing it in technical or investor diligence.
+This public GitHub snapshot contains demonstration code and is the planned destination for the validated external-user iOS MVP. The private E2E repository is the integration and Maestro test stage. The current status of the Replit working tree and external TestFlight distribution must be verified separately. The presence of a screen, dependency, configuration key, or simulated transaction does not establish a live provider integration, production security control, completed KYC, legal document execution, credit decision, loan disbursement, or on-chain settlement. Validate any such capability separately before citing it in technical or investor diligence.
 
 ## Tech Stack
 
