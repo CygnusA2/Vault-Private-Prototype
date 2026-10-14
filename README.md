@@ -1,16 +1,21 @@
-# Vault Private — UHNW Private Banking Authenticator
+# Vault Private — Client Experience Prototype
 
 ## Project Title
 
-**Vault Private — UHNW Private Banking Authenticator**
+**Vault Private — Client Experience Prototype**
 
 ## Description
 
-Vault Private is a proprietary private banking MVP designed for ultra-high-net-worth clients who need secure onboarding, AI-assisted asset verification, tokenization simulation, and instant liquidity access through a premium digital banking experience. The project demonstrates the complete client journey from onboarding and KYC to document signing, asset tokenization, portfolio analysis, and liquidity execution.
+Vault Private is a public client-experience prototype for ultra-high-net-worth users. It illustrates onboarding, asset submission, AI-assisted analysis concepts, tokenization simulation, and a proposed liquidity journey. Screens and code in this repository should not be taken as evidence that lending, token issuance, settlement, or regulated banking services are live.
 
-This MVP was built on **Replit** as an investor-ready and client-facing prototype to showcase how Cygnus-A2 can combine private banking, real-world asset tokenization, AI verification, and secure digital workflows into one integrated experience.
+This prototype was developed on **Replit** to explore how a private banking client experience could bring those workflows together. External provider connectivity and security properties require separate end-to-end verification.
 
 ---
+
+
+## Maturity and validation
+
+This repository is a demonstration prototype. It is distinct from the private Cygnus-A² MVP and production website repositories. The presence of a screen, dependency, configuration key, or simulated transaction does not establish a live provider integration, production security control, completed KYC, legal document execution, credit decision, loan disbursement, or on-chain settlement. Validate any such capability separately before citing it in technical or investor diligence.
 
 ## Tech Stack
 
@@ -104,8 +109,8 @@ This project was built on **Replit** using a full-stack TypeScript architecture 
 
 | Integration | Type | Capability |
 |---|---|---|
-| OpenAI GPT-4 | Live API | AI asset verification, portfolio analysis, and wealth advisory support |
-| DocuSign eSignature | Live API | Digital signatures for KYC, loan agreements, and tokenization consent |
+| OpenAI API | Prototype configuration; live behavior not independently verified here | AI-assisted analysis concepts |
+| DocuSign eSignature | Prototype configuration; live signing not independently verified here | Proposed digital signature workflow |
 | Canton Network | Demo simulation | Asset tokenization with realistic blockchain-style transaction data |
 | Stewart Title | API-ready | Real estate title search, escrow, and insurance quotes |
 | Wolters Kluwer | API-ready | Lien searches, UCC filings, eVault workflow, and risk assessment support |
@@ -125,7 +130,7 @@ This project was built on **Replit** using a full-stack TypeScript architecture 
 
 ## Application Flow
 
-The MVP demonstrates a complete private banking transaction journey:
+The prototype illustrates a proposed client journey:
 
 1. **Client Onboarding**
    - UHNW client enters the private banking environment.
@@ -141,7 +146,7 @@ The MVP demonstrates a complete private banking transaction journey:
    - Asset details are captured for verification, tokenization simulation, and liquidity assessment.
 
 4. **AI Asset Verification**
-   - OpenAI GPT-4 is used to support AI-powered asset analysis.
+   - The OpenAI API is referenced for AI-assisted asset analysis; current live behavior requires verification.
    - The system reviews asset data and produces a structured verification-style output.
 
 5. **Title, Lien, and Risk Infrastructure**
@@ -149,13 +154,13 @@ The MVP demonstrates a complete private banking transaction journey:
    - Wolters Kluwer integration is prepared for lien searches, UCC filings, eVault logic, and risk assessment.
 
 6. **Digital Signature Workflow**
-   - DocuSign is used to support digital signing of KYC documents, loan agreements, and tokenization consent forms.
+   - DocuSign integration is represented in the prototype; a live end-to-end signing flow is not independently verified here.
 
 7. **Tokenization Simulation**
    - Canton Network is simulated to demonstrate real-world asset tokenization logic.
    - The MVP displays a blockchain-style transaction flow for investor and client presentations.
 
-8. **Instant Liquidity Flow**
+8. **Liquidity Flow Simulation**
    - The client sees how a verified and tokenized illiquid asset could be converted into available liquidity.
    - The prototype demonstrates the strategic value proposition of faster access to capital without a forced asset sale.
 
@@ -171,7 +176,7 @@ The MVP demonstrates a complete private banking transaction journey:
 - Secure onboarding and authentication journey
 - AI-powered asset verification flow
 - Document upload capability
-- Digital signature workflow using DocuSign
+- Proposed digital signature workflow
 - Real-world asset tokenization simulation
 - Canton Network-style blockchain transaction flow
 - Liquidity conversion prototype
@@ -199,7 +204,7 @@ The project uses:
 - **React Native with Expo** for the mobile-first user experience
 - **Node.js and Express** for the backend API server
 - **OpenAI API** for AI-powered analysis
-- **DocuSign API** for digital signature workflows
+- **DocuSign API configuration** for a proposed digital signature workflow
 - **Simulated Canton Network logic** for tokenization demonstrations
 - **Prepared API architecture** for Stewart Title and Wolters Kluwer integrations
 
